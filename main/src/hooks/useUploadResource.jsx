@@ -59,6 +59,9 @@ async function compressPDF(file) {
   }
 }
 
+
+
+
 export const handleUpload = async ({
   e,
   formData,
@@ -69,6 +72,8 @@ export const handleUpload = async ({
   currentUser,
 }) => {
   e.preventDefault();
+
+  console.log("Current User:", currentUser.fullName);
 
   const {
     title,
@@ -136,7 +141,8 @@ export const handleUpload = async ({
               fileUrl,
               fileName: cleanFileName,
               storagePath,
-              uploadedBy: currentUser.uid,
+              uploadedBy:  currentUser.uid,
+              fullName: currentUser.fullName || "Anonymous",   
               createdAt: serverTimestamp(),
               fileSize: fileItem.size,
             });

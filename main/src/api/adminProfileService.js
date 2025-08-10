@@ -3,7 +3,7 @@ import { db } from "./firebase";
 
 export const createOrUpdateAdminProfile = async (uid, profileData) => {
   try {
-    const adminRef = doc(db, "admins", uid);
+    const adminRef = doc(db, "users", uid);
     await setDoc(adminRef, {
       ...profileData,
       joinedAt: serverTimestamp(),

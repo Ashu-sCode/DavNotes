@@ -13,16 +13,28 @@ const RecentUploadsTable = ({ data = [], loading }) => {
       <table className="min-w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-gray-300 dark:border-gray-600 dark:text-white">
-            <th scope="col" className="px-3 py-2 text-sm font-medium whitespace-nowrap">
+            <th
+              scope="col"
+              className="px-3 py-2 text-sm font-medium whitespace-nowrap"
+            >
               Category
             </th>
-            <th scope="col" className="px-3 py-2 text-sm font-medium whitespace-nowrap">
+            <th
+              scope="col"
+              className="px-3 py-2 text-sm font-medium whitespace-nowrap"
+            >
               Program
             </th>
-            <th scope="col" className="px-3 py-2 text-sm font-medium whitespace-nowrap">
+            <th
+              scope="col"
+              className="px-3 py-2 text-sm font-medium whitespace-nowrap"
+            >
               Uploaded By
             </th>
-            <th scope="col" className="px-3 py-2 text-sm font-medium whitespace-nowrap">
+            <th
+              scope="col"
+              className="px-3 py-2 text-sm font-medium whitespace-nowrap"
+            >
               Date
             </th>
           </tr>
@@ -31,7 +43,10 @@ const RecentUploadsTable = ({ data = [], loading }) => {
           {loading ? (
             // Skeleton Loader Rows with varied widths
             [...Array(5)].map((_, i) => (
-              <tr key={i} className="border-b border-gray-200 dark:border-gray-700">
+              <tr
+                key={i}
+                className="border-b border-gray-200 dark:border-gray-700"
+              >
                 <td className="px-3 py-2">
                   <div className="h-4 w-20 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
                 </td>
@@ -48,7 +63,10 @@ const RecentUploadsTable = ({ data = [], loading }) => {
             ))
           ) : recentUploads.length === 0 ? (
             <tr>
-              <td colSpan="4" className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <td
+                colSpan="4"
+                className="p-8 text-center text-gray-500 dark:text-gray-400"
+              >
                 <div className="mb-2 text-4xl select-none">📂</div>
                 No uploads yet.
               </td>
@@ -74,9 +92,9 @@ const RecentUploadsTable = ({ data = [], loading }) => {
                 </td>
                 <td
                   className="px-3 py-2 whitespace-nowrap truncate max-w-[150px]"
-                  title={item.uploadedBy}
+                  title={item.fullName || item.uploadedBy}
                 >
-                  {item.uploadedBy}
+                  {item.fullName || item.uploadedBy}
                 </td>
                 <td
                   className="px-3 py-2 whitespace-nowrap"

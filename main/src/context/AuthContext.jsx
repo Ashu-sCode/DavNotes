@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -14,7 +13,7 @@ import { toast } from "react-hot-toast";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); // will hold merged user data
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,9 +27,9 @@ export const AuthProvider = ({ children }) => {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
-        const role = userDoc.data().role || "student";
-        setCurrentUser(user);
-        setRole(role);
+        const userData = userDoc.data();
+        setCurrentUser({ ...user, ...userData });  // Merge auth user + Firestore data
+        setRole(userData.role || "student");
         toast.success("Logged in successfully!");
       } else {
         throw new Error("User role not found in Firestore.");
@@ -41,8 +40,6 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
-  // i was doing login route issue .
 
   const logout = async () => {
     try {
@@ -56,26 +53,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🔄 Auto-authenticate
+  // 🔄 Auto-authenticate on auth state change
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user);
-
         try {
-          const tokenResult = await getIdTokenResult(user, true);
-          const userDoc = await getDoc(doc(db, "users", user.uid));
+          // Fetch Firestore user profile to get full data
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            const data = userDoc.data();
-            if (!data.role) throw new Error("User role missing in Firestore.");
-            setRole(data.role);
+            const userData = userDoc.data();
+            setCurrentUser({ ...user, ...userData }); // merge firebase auth + firestore
+            setRole(userData.role);
           } else {
             throw new Error("User data not found in Firestore.");
           }
         } catch (error) {
           console.error("Error during auth state sync:", error);
           toast.error("Auth error: Unable to fetch role.");
+          setCurrentUser(user);  // fallback to firebase user object only
           setRole(null);
         }
       } else {
@@ -88,7 +85,6 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // 🔁 Memoized context
   const contextValue = useMemo(() => ({
     currentUser,
     role,

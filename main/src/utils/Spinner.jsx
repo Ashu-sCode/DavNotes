@@ -1,4 +1,3 @@
-// components/Spinner.jsx
 import React from "react";
 
 export default function Spinner({ size = 48, className = "" }) {
@@ -92,7 +91,8 @@ export default function Spinner({ size = 48, className = "" }) {
         </g>
       </svg>
 
-      <style jsx>{`
+      {/* Insert plain <style> tag without jsx attribute */}
+      <style>{`
         @keyframes flipPage {
           0% {
             transform: rotateY(0deg);
@@ -110,7 +110,6 @@ export default function Spinner({ size = 48, className = "" }) {
             opacity: 0;
           }
         }
-
         .page {
           transform-origin: left center;
         }
