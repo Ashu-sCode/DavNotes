@@ -33,6 +33,8 @@ const ManageResources = () => {
 
   const navigate = useNavigate();
 
+
+  // Fetch filtered resources
   const fetchFilteredResources = () => {
     setLoading(true);
 
@@ -69,11 +71,13 @@ const ManageResources = () => {
     return unsubscribe;
   };
 
+  
   useEffect(() => {
     const unsubscribe = fetchFilteredResources();
     return () => unsubscribe();
   }, [filterCategory, filterProgram, filterSubject]);
 
+  // Delete resource
   const handleDelete = async (resource) => {
     const result = await MySwal.fire({
       title: "Delete Resource?",
@@ -108,6 +112,7 @@ const ManageResources = () => {
     }
   };
 
+  // Edit resource
   const handleEdit = (resource) => {
     toast("Edit feature coming soon!");
   };
@@ -117,6 +122,7 @@ const ManageResources = () => {
   const [allPrograms, setAllPrograms] = useState([]);
   const [allSubjects, setAllSubjects] = useState([]);
 
+  // Fetch unique filter lists
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "resources"), (snapshot) => {
       const docs = snapshot.docs.map((d) => d.data());
