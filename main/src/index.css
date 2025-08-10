@@ -42,3 +42,13 @@
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-out;
 }
+
+@keyframes stripe-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
+
+.animate-stripe-move {
+  animation: stripe-move 1.5s linear infinite;
+}
+

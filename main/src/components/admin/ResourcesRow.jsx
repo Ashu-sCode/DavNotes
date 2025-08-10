@@ -15,13 +15,8 @@ const formatBytes = (bytes) => {
 const ResourceRow = ({ resource, onEdit, onDelete }) => {
   const handleDownload = async () => {
     try {
-      // Increment download count in Firestore
       const resourceRef = doc(db, "resources", resource.id);
-      await updateDoc(resourceRef, {
-        downloadCount: increment(1),
-      });
-
-      // Then open the file in a new tab
+      await updateDoc(resourceRef, { downloadCount: increment(1) });
       window.open(resource.fileUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
       console.error("Error tracking download:", error);
@@ -29,10 +24,7 @@ const ResourceRow = ({ resource, onEdit, onDelete }) => {
   };
 
   return (
-    <tr
-      className="border-b border-gray-300 dark:border-gray-600"
-      key={resource.id}
-    >
+    <>
       <td className="p-3">{resource.title}</td>
       <td className="p-3">{resource.category}</td>
       <td className="p-3">{resource.program}</td>
@@ -67,7 +59,7 @@ const ResourceRow = ({ resource, onEdit, onDelete }) => {
           <Download size={16} />
         </button>
       </td>
-    </tr>
+    </>
   );
 };
 

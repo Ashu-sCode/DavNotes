@@ -1,5 +1,6 @@
 import React from "react";
 import ResourceRow from "./ResourcesRow";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ResourcesTable = ({ resources, onEdit, onDelete }) => {
   return (
@@ -18,14 +19,24 @@ const ResourcesTable = ({ resources, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          {resources.map((res) => (
-            <ResourceRow
-              key={res.id}
-              resource={res}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
+          <AnimatePresence>
+            {resources.map((res) => (
+              <motion.tr
+                key={res.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <ResourceRow
+                  resource={res}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              </motion.tr>
+            ))}
+          </AnimatePresence>
         </tbody>
       </table>
     </div>

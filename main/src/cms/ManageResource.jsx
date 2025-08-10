@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { toast } from "react-hot-toast";
 import Swal from "sweetalert2";
@@ -8,8 +15,8 @@ import withReactContent from "sweetalert2-react-content";
 import { db, storage } from "../api/firebase";
 import SearchBar from "../components/SearchBar";
 import ResourcesTable from "../components/admin/ResourcesTable";
-import { cleanupMissingFiles } from "../utils/admin/cleanupMissingFiles";
-import Spinner from "../utils/Spinner"; // ✅ Add your spinner
+import Spinner from "../utils/Spinner";
+import { useNavigate } from "react-router-dom";
 
 const MySwal = withReactContent(Swal);
 
@@ -18,14 +25,31 @@ const ManageResources = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    cleanupMissingFiles();
-  }, []);
+  // Filters
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterProgram, setFilterProgram] = useState("");
+  const [filterSubject, setFilterSubject] = useState("");
 
-  useEffect(() => {
+  const navigate = useNavigate();
+
+  const fetchFilteredResources = () => {
     setLoading(true);
+
+    // Build Firestore query dynamically
+    let q = collection(db, "resources");
+    let conditions = [];
+
+    if (filterCategory)
+      conditions.push(where("category", "==", filterCategory));
+    if (filterProgram) conditions.push(where("program", "==", filterProgram));
+    if (filterSubject) conditions.push(where("subject", "==", filterSubject));
+
+    if (conditions.length > 0) {
+      q = query(q, ...conditions);
+    }
+
     const unsubscribe = onSnapshot(
-      collection(db, "resources"),
+      q,
       (snapshot) => {
         const fetched = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
@@ -35,14 +59,19 @@ const ManageResources = () => {
         setLoading(false);
       },
       (error) => {
-        console.error("Error listening to resources:", error);
+        console.error("Error fetching filtered resources:", error);
         toast.error("Failed to load resources");
         setLoading(false);
       }
     );
 
+    return unsubscribe;
+  };
+
+  useEffect(() => {
+    const unsubscribe = fetchFilteredResources();
     return () => unsubscribe();
-  }, []);
+  }, [filterCategory, filterProgram, filterSubject]);
 
   const handleDelete = async (resource) => {
     const result = await MySwal.fire({
@@ -78,6 +107,27 @@ const ManageResources = () => {
     }
   };
 
+  const handleEdit = (resource) => {
+    toast("Edit feature coming soon!");
+  };
+
+  // Unique filter lists — keep them from ALL docs, not just filtered ones
+  const [allCategories, setAllCategories] = useState([]);
+  const [allPrograms, setAllPrograms] = useState([]);
+  const [allSubjects, setAllSubjects] = useState([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "resources"), (snapshot) => {
+      const docs = snapshot.docs.map((d) => d.data());
+      setAllCategories(
+        [...new Set(docs.map((r) => r.category))].filter(Boolean)
+      );
+      setAllPrograms([...new Set(docs.map((r) => r.program))].filter(Boolean));
+      setAllSubjects([...new Set(docs.map((r) => r.subject))].filter(Boolean));
+    });
+    return () => unsub();
+  }, []);
+
   const filteredResources = resources.filter(
     (res) =>
       res.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,35 +136,67 @@ const ManageResources = () => {
       res.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEdit = (resource) => {
-    toast("Edit feature coming soon!");
-  };
-
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-lg transition-colors duration-500">
       <h2 className="text-2xl font-bold mb-4">📂 Manage Resources</h2>
 
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-
-      {loading ? (
-        <div className="transition-opacity duration-500 opacity-100">
-          <Spinner size={48} />
+      {/* Search + Filters */}
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+        <div className="flex-1">
+          <SearchBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filterCategory={filterCategory}
+            setFilterCategory={setFilterCategory}
+            filterProgram={filterProgram}
+            setFilterProgram={setFilterProgram}
+            filterSubject={filterSubject}
+            setFilterSubject={setFilterSubject}
+            allCategories={allCategories}
+            allPrograms={allPrograms}
+            allSubjects={allSubjects}
+          />
         </div>
-      ) : (
-        <div className="transition-opacity duration-500 opacity-100 animate-fadeIn">
+      </div>
+
+      {/* Results Section */}
+      <div className="relative min-h-[200px]">
+        {/* Overlay Spinner (no flicker) */}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm z-10 transition-opacity duration-300">
+            <Spinner size={48} />
+          </div>
+        )}
+
+        {/* Animated Content */}
+        <div
+          // className={`transition-all duration-300 ${
+          //   loading ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
+          // }`}
+        >
           {filteredResources.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-100">
-              No resources found.
+              No resources found. Try adjusting your search or{" "}
+              <button
+                onClick={() => navigate("/admin/upload")}
+                className="text-indigo-500 underline hover:text-indigo-600"
+              >
+                uploading a new one
+              </button>
+              .
             </p>
           ) : (
-            <ResourcesTable
-              resources={filteredResources}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
+            <div className="animate-fadeIn">
+              <ResourcesTable
+                resources={filteredResources}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                showDownloadCount={true}
+              />
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

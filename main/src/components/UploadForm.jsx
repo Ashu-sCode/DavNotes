@@ -5,6 +5,7 @@ import { Spinner } from "flowbite-react";
 
 import { useAuth } from "../context/AuthContext";
 import { handleUpload } from "../hooks/useUploadResource";
+import ProgressBar from "../utils/ProgressBar";
 
 const UploadForm = () => {
   const [formData, setFormData] = useState({
@@ -128,18 +129,18 @@ const UploadForm = () => {
   };
 
   return (
-    <form className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-700 shadow-lg rounded-xl space-y-4">
+    <form className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-700 shadow-lg rounded-xl space-y-4 transition-colors duration-300">
       <h2 className="text-2xl font-semibold text-gray-700 dark:text-white">
         📤 Upload Resource
       </h2>
 
-     <input
+      <input
         type="text"
         name="title"
         placeholder="Enter Title"
         value={formData.title}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white transition-colors duration-300"
         required
       />
 
@@ -148,7 +149,7 @@ const UploadForm = () => {
         name="category"
         value={formData.category}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white transition-colors duration-300"
       >
         {typeOptions.map((type) => (
           <option key={type.value} value={type.value}>
@@ -162,7 +163,7 @@ const UploadForm = () => {
         name="program"
         value={formData.program}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white transition-colors duration-300"
         required
       >
         <option value="">Select Program</option>
@@ -178,7 +179,7 @@ const UploadForm = () => {
         name="year"
         value={formData.year}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white transition-colors duration-300"
         required
       >
         <option value="">Select Year</option>
@@ -194,7 +195,7 @@ const UploadForm = () => {
         name="semester"
         value={formData.semester}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white transition-colors duration-300"
         required
         disabled={!formData.year}
       >
@@ -213,7 +214,7 @@ const UploadForm = () => {
         placeholder="Enter Subject Name"
         value={formData.subject}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white transition-colors duration-300"
         required
       />
 
@@ -224,28 +225,31 @@ const UploadForm = () => {
         multiple
         name="file"
         onChange={handleFileChange}
-        className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 transition"
+        className="w-full text-sm text-gray-900 dark:text-gray-200
+               file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0
+               file:text-sm file:font-medium file:bg-indigo-600 file:text-white
+               hover:file:bg-indigo-700 transition-colors duration-300"
       />
 
       {Object.entries(uploadProgress).map(([fileName, progress]) => (
-        <div key={fileName} className="my-2">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {fileName}: {progress}%
-          </p>
-          <div className="w-full h-2 bg-gray-200 rounded">
-            <div
-              className="h-2 bg-indigo-600 rounded"
-              style={{ width: `${progress}%` }}
-            />
+        <div key={fileName} className="my-4">
+          <div className="flex justify-between mb-1">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate max-w-[70%]">
+              {fileName}
+            </p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {progress}%
+            </p>
           </div>
+          <ProgressBar progress={progress} />
         </div>
       ))}
 
       <button
         type="button"
-        className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 
-                 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-3 px-4 
-                 rounded-md transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700
+               dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-3 px-4
+               rounded-md transition-colors  duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
         disabled={uploading}
         onClick={(e) =>
           handleUpload({
