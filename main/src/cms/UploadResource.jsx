@@ -13,6 +13,7 @@ const UploadResource = () => {
 
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false); // ✅ For UploadForm actions
 
   // Fetch user role
   useEffect(() => {
@@ -51,19 +52,27 @@ const UploadResource = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <Spinner size={48} /> {/* ✅ Modern, dark-mode friendly spinner */}
+      <div className="flex justify-center items-center min-h-[70vh] transition-opacity duration-500 opacity-100 animate-fadeIn">
+        <Spinner size={48} />
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-700 pt-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-all duration-300 p-6 sm:p-10 mb-12">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-700 pt-24 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-10 mb-12 transition-opacity duration-500 animate-fadeIn">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-100">
           📤 Upload a New Resource
         </h2>
-        <UploadForm />
+
+        {formLoading ? (
+          <div className="flex justify-center items-center min-h-[200px] transition-opacity duration-500 animate-fadeIn">
+            <Spinner size={40} />
+          </div>
+        ) : (
+          <div className="transition-opacity duration-500 animate-fadeIn">
+            <UploadForm setFormLoading={setFormLoading} />
+          </div>
+        )}
       </div>
     </div>
   );

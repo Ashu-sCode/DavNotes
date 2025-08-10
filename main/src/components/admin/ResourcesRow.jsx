@@ -1,5 +1,7 @@
 import React from "react";
 import { Edit3, Trash2, Download } from "lucide-react";
+import { doc, updateDoc, increment } from "firebase/firestore";
+import { db } from "../../api/firebase";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "-";
@@ -11,15 +13,36 @@ const formatBytes = (bytes) => {
 };
 
 const ResourceRow = ({ resource, onEdit, onDelete }) => {
+  const handleDownload = async () => {
+    try {
+      // Increment download count in Firestore
+      const resourceRef = doc(db, "resources", resource.id);
+      await updateDoc(resourceRef, {
+        downloadCount: increment(1),
+      });
+
+      // Then open the file in a new tab
+      window.open(resource.fileUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Error tracking download:", error);
+    }
+  };
+
   return (
-    <tr className="border-b border-gray-300 dark:border-gray-600" key={resource.id}>
+    <tr
+      className="border-b border-gray-300 dark:border-gray-600"
+      key={resource.id}
+    >
+      <td className="p-3">{resource.title}</td>
       <td className="p-3">{resource.category}</td>
       <td className="p-3">{resource.program}</td>
       <td className="p-3">{resource.year}</td>
       <td className="p-3">{resource.subject}</td>
       <td className="p-3">{formatBytes(resource.fileSize)}</td>
       <td className="p-3">
-        {resource.createdAt ? resource.createdAt.toDate().toLocaleDateString() : "-"}
+        {resource.createdAt
+          ? resource.createdAt.toDate().toLocaleDateString()
+          : "-"}
       </td>
       <td className="p-3 text-right flex gap-2 justify-end">
         <button
@@ -36,15 +59,13 @@ const ResourceRow = ({ resource, onEdit, onDelete }) => {
         >
           <Trash2 size={16} />
         </button>
-        <a
-          href={resource.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handleDownload}
           className="p-2 bg-green-600 text-white rounded hover:bg-green-700"
           aria-label={`Download ${resource.title || "resource"}`}
         >
           <Download size={16} />
-        </a>
+        </button>
       </td>
     </tr>
   );

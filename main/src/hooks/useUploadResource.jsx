@@ -75,7 +75,7 @@ export const handleUpload = async ({
   } = formData;
 
   // 1. Validation
-  if (!file || file.length === 0 || !category || !program || !year || !semester || !subject) {
+  if (!file || file.length === 0 || !title ||!category || !program || !year || !semester || !subject) {
     toast.error("Please fill all required fields");
     return;
   }
@@ -155,7 +155,7 @@ export const handleUpload = async ({
               storagePath,
               uploadedBy: currentUser.uid,
               createdAt: serverTimestamp(),
-              fileSize: fileItem.size, // <--- Add this line
+               fileSize: fileItem.size, // <--- Add this line
             });
 
             resolve();

@@ -1,47 +1,48 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Download, PlusCircle, FolderCog } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const QuickActions = () => {
   const navigate = useNavigate();
 
-  const handleExport = () => {
-    // TODO: Implement CSV/Excel export logic
-    alert("📤 Export feature coming soon!");
-  };
+  const actions = [
+    {
+      label: "Upload Resource",
+      icon: <PlusCircle size={22} />,
+      color: "bg-indigo-600 hover:bg-indigo-700 focus-visible:ring-indigo-400",
+      onClick: () => navigate("/admin/upload"),
+    },
+    {
+      label: "Manage Resources",
+      icon: <FolderCog size={22} />,
+      color: "bg-green-600 hover:bg-green-700 focus-visible:ring-green-400",
+      onClick: () => navigate("/admin/manage"),
+    },
+    {
+      label: "Export Data",
+      icon: <Download size={22} />,
+      color: "bg-yellow-500 hover:bg-yellow-600 focus-visible:ring-yellow-400",
+      onClick: () => toast("📤 Export feature coming soon!", { icon: "⚡" }),
+    },
+  ];
 
   return (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-      <h2 className="text-xl dark:text-white font-semibold mb-4">Quick Actions</h2>
+      <h2 className="text-xl dark:text-white font-semibold mb-4">
+        Quick Actions
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        
-        {/* Upload New Resource */}
-        <button
-          onClick={() => navigate("/admin/upload")}
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
-        >
-          <PlusCircle size={20} />
-          Upload Resource
-        </button>
-
-        {/* Manage Resources */}
-        <button
-          onClick={() => navigate("/admin/manage")}
-          className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
-        >
-          <FolderCog size={20} />
-          Manage Resources
-        </button>
-
-        {/* Export Data */}
-        <button
-          onClick={handleExport}
-          className="w-full flex items-center justify-center gap-2 bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400"
-        >
-          <Download size={20} />
-          Export Data
-        </button>
-
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            onClick={action.onClick}
+            className={`w-full flex items-center justify-center gap-2 text-white py-3 rounded-lg shadow-sm transition transform hover:scale-105 focus:outline-none focus-visible:ring-2 ${action.color}`}
+          >
+            {action.icon}
+            {action.label}
+          </button>
+        ))}
       </div>
     </div>
   );

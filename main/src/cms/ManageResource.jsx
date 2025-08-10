@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { toast } from "react-hot-toast";
@@ -9,6 +9,7 @@ import { db, storage } from "../api/firebase";
 import SearchBar from "../components/SearchBar";
 import ResourcesTable from "../components/admin/ResourcesTable";
 import { cleanupMissingFiles } from "../utils/admin/cleanupMissingFiles";
+import Spinner from "../utils/Spinner"; // ✅ Add your spinner
 
 const MySwal = withReactContent(Swal);
 
@@ -46,7 +47,9 @@ const ManageResources = () => {
   const handleDelete = async (resource) => {
     const result = await MySwal.fire({
       title: "Delete Resource?",
-      text: `Are you sure you want to delete "${resource.title || "this resource"}"?`,
+      text: `Are you sure you want to delete "${
+        resource.title || "this resource"
+      }"?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -83,27 +86,34 @@ const ManageResources = () => {
       res.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // For now, edit just shows a toast (you can expand this later)
   const handleEdit = (resource) => {
     toast("Edit feature coming soon!");
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-lg">
+    <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-lg transition-colors duration-500">
       <h2 className="text-2xl font-bold mb-4">📂 Manage Resources</h2>
 
       <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
       {loading ? (
-        <p className="text-gray-500">Loading resources...</p>
-      ) : filteredResources.length === 0 ? (
-        <p className="text-gray-500 dark:text-gray-100">No resources found.</p>
+        <div className="transition-opacity duration-500 opacity-100">
+          <Spinner size={48} />
+        </div>
       ) : (
-        <ResourcesTable
-          resources={filteredResources}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
+        <div className="transition-opacity duration-500 opacity-100 animate-fadeIn">
+          {filteredResources.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-100">
+              No resources found.
+            </p>
+          ) : (
+            <ResourcesTable
+              resources={filteredResources}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          )}
+        </div>
       )}
     </div>
   );

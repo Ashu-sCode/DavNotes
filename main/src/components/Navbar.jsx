@@ -11,7 +11,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true); // ✅ Loader state
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
 
@@ -20,12 +20,12 @@ export default function Navbar() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        setIsAdmin(true); // Assume all logged-in users are admin
+        setIsAdmin(true);
       } else {
         setUser(null);
         setIsAdmin(false);
       }
-      setLoading(false); // ✅ Stop loader after check
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -44,6 +44,7 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Navbar */}
       <nav className="bg-blue-600 dark:bg-gray-900 text-white dark:text-gray-100 shadow-md fixed w-full z-50 top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -66,20 +67,11 @@ export default function Navbar() {
                 </div>
               ) : (
                 <>
-                  <Link to="/" className="hover:underline hover:text-gray-200">
-                    Home
-                  </Link>
-                  <Link to="/notes" className="hover:underline hover:text-gray-200">
-                    Notes
-                  </Link>
-                  <Link to="/assignments" className="hover:underline hover:text-gray-200">
-                    Assignments
-                  </Link>
+                  <Link to="/" className="hover:underline hover:text-gray-200">Home</Link>
+                  <Link to="/notes" className="hover:underline hover:text-gray-200">Notes</Link>
+                  <Link to="/assignments" className="hover:underline hover:text-gray-200">Assignments</Link>
                   {isAdmin && (
-                    <Link
-                      to="/admin/dashboard"
-                      className="hover:underline hover:text-gray-200"
-                    >
+                    <Link to="/admin/dashboard" className="hover:underline hover:text-gray-200">
                       Admin
                     </Link>
                   )}
@@ -115,10 +107,10 @@ export default function Navbar() {
         />
       )}
 
-      {/* Slide-in Mobile Menu */}
+      {/* Slide-in Mobile Menu (starts below navbar) */}
       <div
         className={clsx(
-          "fixed top-0 right-0 h-screen w-1/2 z-50 bg-blue-700 dark:bg-gray-800 shadow-lg transition-transform duration-300 ease-in-out",
+          "fixed top-16 right-0 h-[calc(100vh-4rem)] w-3/4 max-w-xs z-50 bg-blue-700 dark:bg-gray-800 shadow-lg transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "translate-x-full",
           "md:hidden"
         )}
@@ -126,8 +118,8 @@ export default function Navbar() {
         <div className="flex flex-col px-6 py-6 gap-6 text-white font-medium text-base">
           {loading ? (
             <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span className="text-gray-200">Loading...</span>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span className="text-gray-200">Loading...</span>
             </div>
           ) : (
             <>
@@ -137,19 +129,11 @@ export default function Navbar() {
               <Link to="/notes" onClick={toggleMenu} className="hover:text-gray-300">
                 Notes
               </Link>
-              <Link
-                to="/assignments"
-                onClick={toggleMenu}
-                className="hover:text-gray-300"
-              >
+              <Link to="/assignments" onClick={toggleMenu} className="hover:text-gray-300">
                 Assignments
               </Link>
               {isAdmin && (
-                <Link
-                  to="/admin/dashboard"
-                  onClick={toggleMenu}
-                  className="hover:text-gray-300"
-                >
+                <Link to="/admin/dashboard" onClick={toggleMenu} className="hover:text-gray-300">
                   Admin
                 </Link>
               )}

@@ -1,28 +1,53 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "../../api/firebase";
 
-const StatsCards = ({ stats }) => {
-  const [storageBytes, setStorageBytes] = useState(0);
+const StatsCards = () => {
+  const [stats, setStats] = useState({
+    totalResources: 0,
+    todaysUploads: 0,
+    totalDownloads: 0,
+    storageBytes: 0,
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchStorageUsage() {
-      setLoading(true);
-      let total = 0;
+    const resourcesRef = collection(db, "resources");
 
-      const snapshot = await getDocs(collection(db, "resources"));
+    const unsubscribe = onSnapshot(resourcesRef, (snapshot) => {
+      let totalResources = 0;
+      let todaysUploads = 0;
+      let totalDownloads = 0;
+      let totalBytes = 0;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
       snapshot.forEach((doc) => {
         const data = doc.data();
-        total += data.fileSize || 0;
+        totalResources++;
+        totalBytes += data.fileSize || 0;
+        totalDownloads += data.downloadCount || 0;
+
+        if (data.createdAt instanceof Timestamp) {
+          const createdDate = data.createdAt.toDate();
+          if (createdDate >= today) {
+            todaysUploads++;
+          }
+        }
       });
 
-      setStorageBytes(total);
+      setStats({
+        totalResources,
+        todaysUploads,
+        totalDownloads,
+        storageBytes: totalBytes,
+      });
       setLoading(false);
-    }
+    });
 
-    fetchStorageUsage();
+    return () => unsubscribe();
   }, []);
 
   function formatBytes(bytes) {
@@ -36,9 +61,9 @@ const StatsCards = ({ stats }) => {
 
   const cards = [
     { title: "Total Resources", value: stats.totalResources },
-    { title: "Total Users", value: stats.totalUsers },
     { title: "Today's Uploads", value: stats.todaysUploads },
-    { title: "Storage Used", value: loading ? "Loading..." : formatBytes(storageBytes) },
+    { title: "Total Downloads", value: stats.totalDownloads },
+    { title: "Storage Used", value: formatBytes(stats.storageBytes) },
   ];
 
   return (
@@ -49,7 +74,13 @@ const StatsCards = ({ stats }) => {
           className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"
         >
           <h2 className="text-lg font-semibold">{card.title}</h2>
-          <p className="text-2xl font-bold">{card.value}</p>
+          {loading ? (
+            <div className="h-8 w-20 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
+          ) : (
+            <p className="text-2xl font-bold transition-opacity duration-500">
+              {card.value}
+            </p>
+          )}
         </div>
       ))}
     </div>

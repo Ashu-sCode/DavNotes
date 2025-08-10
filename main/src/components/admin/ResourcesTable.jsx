@@ -7,6 +7,7 @@ const ResourcesTable = ({ resources, onEdit, onDelete }) => {
       <table className="min-w-full border-collapse">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800 text-left">
+            <th className="p-3">Title</th>
             <th className="p-3">Category</th>
             <th className="p-3">Program</th>
             <th className="p-3">Year</th>

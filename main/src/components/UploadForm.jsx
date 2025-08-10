@@ -133,6 +133,16 @@ const UploadForm = () => {
         📤 Upload Resource
       </h2>
 
+     <input
+        type="text"
+        name="title"
+        placeholder="Enter Title"
+        value={formData.title}
+        onChange={handleChange}
+        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+        required
+      />
+
       {/* Category */}
       <select
         name="category"
