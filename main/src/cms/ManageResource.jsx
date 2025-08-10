@@ -15,6 +15,7 @@ import withReactContent from "sweetalert2-react-content";
 import { db, storage } from "../api/firebase";
 import SearchBar from "../components/SearchBar";
 import ResourcesTable from "../components/admin/ResourcesTable";
+import FloatingUploadButton from "../components/admin/FloatingUploadButton";
 import Spinner from "../utils/Spinner";
 import { useNavigate } from "react-router-dom";
 
@@ -197,6 +198,8 @@ const ManageResources = () => {
           )}
         </div>
       </div>
+
+      <FloatingUploadButton />
     </div>
   );
 };
