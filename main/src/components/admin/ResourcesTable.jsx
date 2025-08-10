@@ -1,13 +1,32 @@
 import React from "react";
 import ResourceRow from "./ResourcesRow";
-import { motion, AnimatePresence } from "framer-motion";
 
-const ResourcesTable = ({ resources, onEdit, onDelete }) => {
+const ResourcesTable = ({
+  resources = [],
+  selectedIds = [],
+  onEdit,
+  onDelete,
+  toggleSelect,
+  toggleSelectAll,
+}) => {
+  // Check if all resources are selected
+  const allSelected = resources.length > 0 && selectedIds.length === resources.length;
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border-collapse">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800 text-left">
+            {/* Select All checkbox */}
+            <th className="p-3">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                aria-label="Select all resources"
+                className="cursor-pointer"
+              />
+            </th>
             <th className="p-3">Title</th>
             <th className="p-3">Category</th>
             <th className="p-3">Program</th>
@@ -19,24 +38,19 @@ const ResourcesTable = ({ resources, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          <AnimatePresence>
-            {resources.map((res) => (
-              <motion.tr
+          {resources.map((res) => {
+            const isSelected = selectedIds.includes(res.id);
+            return (
+              <ResourceRow
                 key={res.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
-                className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <ResourceRow
-                  resource={res}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              </motion.tr>
-            ))}
-          </AnimatePresence>
+                resource={res}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                isSelected={isSelected}
+                toggleSelect={() => toggleSelect(res.id)}
+              />
+            );
+          })}
         </tbody>
       </table>
     </div>

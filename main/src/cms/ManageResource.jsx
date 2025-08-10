@@ -18,6 +18,7 @@ import ResourcesTable from "../components/admin/ResourcesTable";
 import FloatingUploadButton from "../components/admin/FloatingUploadButton";
 import Spinner from "../utils/Spinner";
 import { useNavigate } from "react-router-dom";
+import FloatingDeleteButton from "../components/admin/FloatingDeleteButton";
 
 const MySwal = withReactContent(Swal);
 
@@ -25,6 +26,7 @@ const ManageResources = () => {
   const [resources, setResources] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   // Filters
   const [filterCategory, setFilterCategory] = useState("");
@@ -32,7 +34,6 @@ const ManageResources = () => {
   const [filterSubject, setFilterSubject] = useState("");
 
   const navigate = useNavigate();
-
 
   // Fetch filtered resources
   const fetchFilteredResources = () => {
@@ -71,7 +72,6 @@ const ManageResources = () => {
     return unsubscribe;
   };
 
-  
   useEffect(() => {
     const unsubscribe = fetchFilteredResources();
     return () => unsubscribe();
@@ -143,12 +143,65 @@ const ManageResources = () => {
       res.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const toggleSelectAll = () => {
+    if (selectedIds.length === resources.length) {
+      setSelectedIds([]); // deselect all
+    } else {
+      setSelectedIds(resources.map((r) => r.id)); // select all
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleBatchDelete = async () => {
+    const result = await MySwal.fire({
+      title: `Delete ${selectedIds.length} selected resources?`,
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete them!",
+      background: document.documentElement.classList.contains("dark")
+        ? "#1f2937"
+        : "#ffffff",
+      color: document.documentElement.classList.contains("dark")
+        ? "#f9fafb"
+        : "#111827",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // For each selected resource, delete from storage and firestore
+        for (const id of selectedIds) {
+          const resource = resources.find((r) => r.id === id);
+          if (resource) {
+            if (resource.storagePath) {
+              const fileRef = ref(storage, resource.storagePath);
+              await deleteObject(fileRef);
+            }
+            await deleteDoc(doc(db, "resources", id));
+          }
+        }
+        toast.success(`${selectedIds.length} resources deleted`);
+        setSelectedIds([]); // clear selection after deletion
+      } catch (error) {
+        console.error("Error deleting resources:", error);
+        toast.error("Failed to delete selected resources");
+      }
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-lg transition-colors duration-500">
       <h2 className="text-2xl font-bold mb-4">📂 Manage Resources</h2>
 
       {/* Search + Filters */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
         <div className="flex-1">
           <SearchBar
             searchTerm={searchTerm}
@@ -166,6 +219,14 @@ const ManageResources = () => {
         </div>
       </div>
 
+      {/* Batch Actions */}
+      {selectedIds.length > 0 && (
+        <FloatingDeleteButton
+          onClick={handleBatchDelete}
+          count={selectedIds.length}
+        />
+      )}
+
       {/* Results Section */}
       <div className="relative min-h-[200px]">
         {/* Overlay Spinner (no flicker) */}
@@ -176,11 +237,7 @@ const ManageResources = () => {
         )}
 
         {/* Animated Content */}
-        <div
-          // className={`transition-all duration-300 ${
-          //   loading ? "opacity-50 scale-[0.99]" : "opacity-100 scale-100"
-          // }`}
-        >
+        <div>
           {filteredResources.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-100">
               No resources found. Try adjusting your search or{" "}
@@ -197,7 +254,10 @@ const ManageResources = () => {
               <ResourcesTable
                 resources={filteredResources}
                 onDelete={handleDelete}
+                selectedIds={selectedIds}
                 onEdit={handleEdit}
+                toggleSelect={toggleSelect}
+                toggleSelectAll={toggleSelectAll}
                 showDownloadCount={true}
               />
             </div>

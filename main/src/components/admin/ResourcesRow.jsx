@@ -1,7 +1,5 @@
 import React from "react";
 import { Edit3, Trash2, Download } from "lucide-react";
-import { doc, updateDoc, increment } from "firebase/firestore";
-import { db } from "../../api/firebase";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "-";
@@ -12,19 +10,31 @@ const formatBytes = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 };
 
-const ResourceRow = ({ resource, onEdit, onDelete }) => {
-  const handleDownload = async () => {
-    try {
-      const resourceRef = doc(db, "resources", resource.id);
-      await updateDoc(resourceRef, { downloadCount: increment(1) });
-      window.open(resource.fileUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      console.error("Error tracking download:", error);
-    }
-  };
-
+const ResourceRow = ({
+  resource,
+  onEdit,
+  onDelete,
+  isSelected,
+  toggleSelect,
+}) => {
   return (
-    <>
+    <tr
+      className={`border-b border-gray-300 dark:border-gray-600 ${
+        isSelected ? "bg-indigo-100 dark:bg-indigo-900" : ""
+      }`}
+      key={resource.id}
+    >
+      {/* Selection Checkbox */}
+      <td className="p-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={toggleSelect}
+          aria-label={`Select resource ${resource.title}`}
+          className="cursor-pointer"
+        />
+      </td>
+   
       <td className="p-3">{resource.title}</td>
       <td className="p-3">{resource.category}</td>
       <td className="p-3">{resource.program}</td>
@@ -51,15 +61,17 @@ const ResourceRow = ({ resource, onEdit, onDelete }) => {
         >
           <Trash2 size={16} />
         </button>
-        <button
-          onClick={handleDownload}
+        <a
+          href={resource.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className="p-2 bg-green-600 text-white rounded hover:bg-green-700"
           aria-label={`Download ${resource.title || "resource"}`}
         >
           <Download size={16} />
-        </button>
+        </a>
       </td>
-    </>
+    </tr>
   );
 };
 
