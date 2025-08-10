@@ -13,6 +13,8 @@ import UploadResource from "./cms/UploadResource";
 import PrivateRoute from "./routes/PrivateRoute";
 import ManageResources from "./cms/ManageResource";
 
+import ProfilePage from "./cms/AdminProfile";
+
 function App() {
   return (
     <Router>
@@ -30,6 +32,7 @@ function App() {
             <Route path="/admin/upload" element={<PrivateRoute><UploadResource /></PrivateRoute>} />
             <Route path="/admin/manage" element={<PrivateRoute><ManageResources /></PrivateRoute>} />
             <Route path="/admin/login" element={<PrivateRoute><LoginPage /></PrivateRoute>} />
+            <Route path="/admin/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
           </Routes>
         </main>
         <Footer />

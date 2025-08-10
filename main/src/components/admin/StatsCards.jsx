@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, doc, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "../../api/firebase";
 
 const StatsCards = () => {
@@ -14,11 +14,12 @@ const StatsCards = () => {
 
   useEffect(() => {
     const resourcesRef = collection(db, "resources");
+    const statsDocRef = doc(db, "appStats", "global"); // your global stats doc
 
-    const unsubscribe = onSnapshot(resourcesRef, (snapshot) => {
+    // Listen for resource-related stats except downloads
+    const unsubscribeResources = onSnapshot(resourcesRef, (snapshot) => {
       let totalResources = 0;
       let todaysUploads = 0;
-      let totalDownloads = 0;
       let totalBytes = 0;
 
       const today = new Date();
@@ -28,7 +29,6 @@ const StatsCards = () => {
         const data = doc.data();
         totalResources++;
         totalBytes += data.fileSize || 0;
-        totalDownloads += data.downloadCount || 0;
 
         if (data.createdAt instanceof Timestamp) {
           const createdDate = data.createdAt.toDate();
@@ -38,16 +38,31 @@ const StatsCards = () => {
         }
       });
 
-      setStats({
+      setStats((prev) => ({
+        ...prev,
         totalResources,
         todaysUploads,
-        totalDownloads,
         storageBytes: totalBytes,
-      });
+      }));
+
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for global download count from separate doc
+    const unsubscribeStats = onSnapshot(statsDocRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setStats((prev) => ({
+          ...prev,
+          totalDownloads: data.totalDownloads || 0,
+        }));
+      }
+    });
+
+    return () => {
+      unsubscribeResources();
+      unsubscribeStats();
+    };
   }, []);
 
   function formatBytes(bytes) {

@@ -1,5 +1,8 @@
 import React from "react";
 import { Edit3, Trash2, Download } from "lucide-react";
+import { doc, runTransaction, increment } from "firebase/firestore";
+import { db } from "../../api/firebase";
+import { toast } from "react-hot-toast";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "-";
@@ -17,6 +20,52 @@ const ResourceRow = ({
   isSelected,
   toggleSelect,
 }) => {
+  // Handle download and increment downloadCount in Firestore
+  const handleDownloadClick = async (e) => {
+    e.preventDefault();
+
+    if (!resource.fileUrl) {
+      toast.error("Download URL not available.");
+      return;
+    }
+    try {
+      const resourceRef = doc(db, "resources", resource.id);
+      const statsDocRef = doc(db, "appStats", "global");
+
+      await runTransaction(db, async (transaction) => {
+        const resourceDoc = await transaction.get(resourceRef);
+        const statsDoc = await transaction.get(statsDocRef);
+
+        if (!resourceDoc.exists()) {
+          throw new Error("Resource not found!");
+        }
+
+        // Increment resource download count or set to 1 if missing
+        const currentResourceDownloads = resourceDoc.data().downloadCount || 0;
+        transaction.update(resourceRef, {
+          downloadCount: currentResourceDownloads + 1,
+        });
+
+        // Increment global totalDownloads or set to 1 if missing
+        const currentTotalDownloads = statsDoc.exists()
+          ? statsDoc.data().totalDownloads || 0
+          : 0;
+
+        transaction.set(
+          statsDocRef,
+          { totalDownloads: currentTotalDownloads + 1 },
+          { merge: true }
+        );
+      });
+
+      // Trigger actual file download in a new tab
+      window.open(resource.fileUrl, "_blank");
+    } catch (error) {
+      console.error("Error updating download count:", error);
+      toast.error("Failed to update download count.");
+    }
+  };
+
   return (
     <tr
       className={`border-b border-gray-300 dark:border-gray-600 ${
@@ -34,7 +83,7 @@ const ResourceRow = ({
           className="cursor-pointer"
         />
       </td>
-   
+
       <td className="p-3">{resource.title}</td>
       <td className="p-3">{resource.category}</td>
       <td className="p-3">{resource.program}</td>
@@ -61,15 +110,14 @@ const ResourceRow = ({
         >
           <Trash2 size={16} />
         </button>
-        <a
-          href={resource.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handleDownloadClick}
           className="p-2 bg-green-600 text-white rounded hover:bg-green-700"
           aria-label={`Download ${resource.title || "resource"}`}
+          title={`Download ${resource.title || "resource"}`}
         >
           <Download size={16} />
-        </a>
+        </button>
       </td>
     </tr>
   );

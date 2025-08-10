@@ -15,10 +15,11 @@ import withReactContent from "sweetalert2-react-content";
 import { db, storage } from "../api/firebase";
 import SearchBar from "../components/SearchBar";
 import ResourcesTable from "../components/admin/ResourcesTable";
-import FloatingUploadButton from "../components/admin/FloatingUploadButton";
+import FloatingUploadButton from "../components/admin/FAB/FloatingUploadButton";
+import FloatingDownloadButton from "../components/admin/FAB/FloatingDownloadButton";
 import Spinner from "../utils/Spinner";
 import { useNavigate } from "react-router-dom";
-import FloatingDeleteButton from "../components/admin/FloatingDeleteButton";
+import FloatingDeleteButton from "../components/admin/FAB/FloatingDeleteButton";
 
 const MySwal = withReactContent(Swal);
 
@@ -157,6 +158,62 @@ const ManageResources = () => {
     );
   };
 
+  // Batch download
+  const handleBatchDownload = async () => {
+    if (selectedIds.length === 0) {
+      toast.error("No resources selected for download.");
+      return;
+    }
+
+    const selectedResources = resources.filter((r) =>
+      selectedIds.includes(r.id)
+    );
+
+    if (selectedResources.length === 0) {
+      toast.error("Selected resources not found.");
+      return;
+    }
+
+    // Trigger downloads with a slight stagger to avoid browser blocking
+    selectedResources.forEach((resource, index) => {
+      if (!resource.fileUrl) {
+        toast.error(`No download link for ${resource.title || "a resource"}`);
+        return;
+      }
+
+      setTimeout(() => {
+        const link = document.createElement("a");
+        link.href = resource.fileUrl;
+        link.download = resource.title || `download-${index + 1}`;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, index * 300);
+    });
+
+    // Update Firestore download counts in parallel (no delay)
+    try {
+      await Promise.all(
+        selectedResources.map((resource) =>
+          updateDoc(doc(db, "resources", resource.id), {
+            downloadCount: increment(1),
+          }).catch((error) => {
+            console.error(
+              `Failed to update download count for ${resource.title}`,
+              error
+            );
+          })
+        )
+      );
+      toast.success(`Started downloading ${selectedResources.length} files.`);
+    } catch (error) {
+      toast.error("Some download counts failed to update.");
+    }
+  };
+
+  
+  // Batch delete
   const handleBatchDelete = async () => {
     const result = await MySwal.fire({
       title: `Delete ${selectedIds.length} selected resources?`,
@@ -219,14 +276,6 @@ const ManageResources = () => {
         </div>
       </div>
 
-      {/* Batch Actions */}
-      {selectedIds.length > 0 && (
-        <FloatingDeleteButton
-          onClick={handleBatchDelete}
-          count={selectedIds.length}
-        />
-      )}
-
       {/* Results Section */}
       <div className="relative min-h-[200px]">
         {/* Overlay Spinner (no flicker) */}
@@ -265,6 +314,21 @@ const ManageResources = () => {
         </div>
       </div>
 
+      {/* Batch Actions */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-4">
+          <FloatingDownloadButton
+            count={selectedIds.length}
+            onClick={handleBatchDownload}
+          />
+          <FloatingDeleteButton
+            onClick={handleBatchDelete}
+            count={selectedIds.length}
+          />
+        </div>
+      )}
+
+      {/* Upload button with lower z-index */}
       <FloatingUploadButton />
     </div>
   );

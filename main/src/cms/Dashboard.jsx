@@ -4,8 +4,9 @@ import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import StatsCards from "../components/admin/StatsCards";
 import RecentUploadsTable from "../components/admin/RecentUploadsTable";
 import QuickActions from "../components/admin/QuickActions";
-import FloatingUploadButton from "../components/admin/FloatingUploadButton";
+import FloatingUploadButton from "../components/admin/FAB/FloatingUploadButton";
 import Spinner from "../utils/Spinner"; // ✅ Your spinner component
+import ProfileFab from "../components/admin/FAB/ProfileFab";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -117,7 +118,7 @@ const Dashboard = () => {
           <RecentUploadsTable data={recentUploads} />
         </div>
       </div>
-
+      <ProfileFab />
       <FloatingUploadButton />
     </div>
   );
