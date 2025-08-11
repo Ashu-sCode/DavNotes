@@ -69,7 +69,7 @@ export default function Navbar() {
                 <>
                   <Link to="/" className="hover:underline hover:text-gray-200">Home</Link>
                   <Link to="/notes" className="hover:underline hover:text-gray-200">Notes</Link>
-                  <Link to="/assignments" className="hover:underline hover:text-gray-200">Assignments</Link>
+                  <Link to="/pyq" className="hover:underline hover:text-gray-200">Question Papers</Link>
                   {isAdmin && (
                     <Link to="/admin/dashboard" className="hover:underline hover:text-gray-200">
                       Admin
@@ -129,8 +129,8 @@ export default function Navbar() {
               <Link to="/notes" onClick={toggleMenu} className="hover:text-gray-300">
                 Notes
               </Link>
-              <Link to="/assignments" onClick={toggleMenu} className="hover:text-gray-300">
-                Assignments
+              <Link to="/pyq" onClick={toggleMenu} className="hover:text-gray-300">
+               Question Papers
               </Link>
               {isAdmin && (
                 <Link to="/admin/dashboard" onClick={toggleMenu} className="hover:text-gray-300">
