@@ -1,13 +1,15 @@
+// src/pages/SemestersPage.jsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
+import { GraduationCap } from "lucide-react"; // nice icon
 import SemesterCard from "../components/SemesterCard";
 
 export default function SemestersPage() {
   const { programName } = useParams();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [semesters, setSemesters] = useState([]);
 
@@ -21,12 +23,11 @@ export default function SemestersPage() {
         const snapshot = await getDocs(q);
 
         const semesterSet = new Set();
-        snapshot.forEach(doc => {
+        snapshot.forEach((doc) => {
           const data = doc.data();
           if (data.semester) semesterSet.add(data.semester);
         });
 
-        // Convert to sorted array
         const semesterList = Array.from(semesterSet).sort(
           (a, b) => Number(a) - Number(b)
         );
@@ -46,15 +47,28 @@ export default function SemestersPage() {
     navigate(`/programs/${programName}/semesters/${semester}/subjects`);
   };
 
+
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-      <h1 className="text-3xl font-bold  dark:text-gray-50 mb-4">
-        {programName} - Semesters
-      </h1>
-      <p className="text-gray-600 dark:text-gray-300 mb-6">
-        Choose a semester to explore subjects.
-      </p>
+      {/* Header Section */}
+      <div className="relative h-48 rounded-xl overflow-hidden mb-8">
+        <img
+          src={`/images/${programName.toLowerCase().replace(/\s+/g, "-")}.jpg`}
+          alt={programName}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/40 flex flex-col justify-center px-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-white">
+            {programName} - Semesters
+          </h1>
+          <p className="text-gray-200 mt-2">
+            Choose a semester to explore subjects and resources.
+          </p>
+        </div>
+      </div>
 
+      {/* Grid Section */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -72,6 +86,7 @@ export default function SemestersPage() {
             <SemesterCard
               key={sem}
               semester={sem}
+              icon={<GraduationCap size={28} />}
               onClick={() => openSemester(sem)}
             />
           ))}

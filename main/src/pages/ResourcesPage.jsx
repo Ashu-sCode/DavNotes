@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-  increment,
-} from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
+import ResourceCard from "../components/ResourceCard";
 
 export default function ResourcesPage() {
   const { programName, semester, subject } = useParams();
@@ -35,24 +28,11 @@ export default function ResourcesPage() {
         setLoading(false);
       }
     };
-
     fetchResources();
   }, [programName, semester, subject]);
 
-  const handleDownload = async (id, url) => {
-    try {
-      //   await updateDoc(doc(db, "resources", id), {
-      //     downloads: increment(1)
-      //   });
-
-        // await updateDoc(doc(db, "appstats", "global"), {
-        //   totalDownloads: increment(1)
-        // });
-
-      window.open(url, "_blank");
-    } catch (err) {
-      console.error("Download error:", err);
-    }
+  const handleDownload = (id, url) => {
+    window.open(url, "_blank");
   };
 
   const filteredResources =
@@ -60,45 +40,54 @@ export default function ResourcesPage() {
       ? resources
       : resources.filter((r) => r.category === filterType);
 
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">{subject} Resources</h1>
+  const categories = [
+    { key: "all", label: "All" },
+    { key: "notes", label: "Notes" },
+    { key: "pyq", label: "PYQ" },
+    { key: "assignment", label: "Assignments" },
+    { key: "syllabus", label: "Syllabus" },
+  ];
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <select
-          className="border p-2 rounded"
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-        >
-          <option value="all">All Types</option>
-          <option value="notes">Notes</option>
-          <option value="pyq">PYQ</option>
-          <option value="assignment">Assignments</option>
-          <option value="syllabus">Syllabus</option>
-        </select>
+  return (
+    <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
+      <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">
+        {subject} Resources
+      </h1>
+
+      {/* Filter Pills */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        {categories.map((cat) => (
+          <button
+            key={cat.key}
+            onClick={() => setFilterType(cat.key)}
+            className={`px-4 py-2 rounded-full border transition-all ${
+              filterType === cat.key
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
       </div>
 
+      {/* Content */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ResourceCard key={i} skeleton />
+          ))}
+        </div>
       ) : filteredResources.length === 0 ? (
-        <p>No resources available.</p>
+        <p className="text-gray-500">No resources available.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((res) => (
-            <div
+            <ResourceCard
               key={res.id}
-              className="p-4 border rounded-lg shadow hover:shadow-lg transition"
-            >
-              <h2 className="text-lg font-semibold mb-2">{res.title}</h2>
-              <p className="text-sm text-gray-500 mb-3">{res.category}</p>
-              <button
-                onClick={() => handleDownload(res.id, res.fileUrl)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-              >
-                Download
-              </button>
-            </div>
+              resource={res}
+              onDownload={handleDownload}
+            />
           ))}
         </div>
       )}
