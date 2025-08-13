@@ -14,12 +14,10 @@ const ProgramsPage = () => {
 
   useEffect(() => {
     setLoading(true);
-
     const unsub = onSnapshot(
       collection(db, "resources"),
       (snapshot) => {
         const programCounts = {};
-
         snapshot.forEach((doc) => {
           const program = (doc.data().program || "").trim();
           if (!program) return;
@@ -39,7 +37,6 @@ const ProgramsPage = () => {
         setLoading(false);
       }
     );
-
     return () => unsub();
   }, []);
 
@@ -52,38 +49,34 @@ const ProgramsPage = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pt-24">
+    <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
       <h1 className="text-3xl md:text-4xl font-bold dark:text-green-100 mb-4">Courses</h1>
       <p className="text-gray-600 dark:text-gray-300 mb-6">
         Choose your course to explore semesters, subjects, and downloadable resources.
       </p>
 
       {/* Search Bar */}
-      <div className="mb-6">
+      <div className="mb-8">
         <input
           type="text"
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 
-            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-            focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="w-full md:w-1/3 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
+      {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-36 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse"
-            />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-48 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
           ))}
         </div>
       ) : filteredPrograms.length === 0 ? (
-        <p className="text-gray-500">No programs found yet.</p>
+        <p className="text-gray-500">No courses found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredPrograms.map((p) => (
             <ProgramCard
               key={p.name}
