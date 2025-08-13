@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import { GraduationCap } from "lucide-react"; // nice icon
-import SemesterCard from "../components/SemesterCard";
+import SemesterCard from "../components/cards/SemesterCard";
 
 export default function SemestersPage() {
   const { programName } = useParams();

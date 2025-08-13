@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
-import SubjectCard from "../components/SubjectCard";
+import SubjectCard from "../components/cards/SubjectCard";
 import { Search } from "lucide-react";
 
 export default function SubjectsPage() {

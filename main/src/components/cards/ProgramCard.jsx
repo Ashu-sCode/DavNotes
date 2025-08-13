@@ -1,6 +1,6 @@
 // src/components/ProgramCard.jsx
 import React from "react";
-import { programData } from "../data/data";
+import { programData } from "../../data/data";
 
 const ProgramCard = ({ name, count = 0, onClick }) => {
   const { icon: Icon, image, color } = programData[name] || {};

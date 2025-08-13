@@ -1,10 +1,10 @@
-// src/pages/ProgramsPage.jsx
+import { GraduationCap } from "lucide-react"; // icon
 import React, { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../api/firebase";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import ProgramCard from "../components/ProgramCard";
+import ProgramCard from "../components/cards/ProgramCard";
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
@@ -66,7 +66,7 @@ const ProgramsPage = () => {
         />
       </div>
 
-      {/* Grid */}
+      {/* Grid or Empty State */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -74,7 +74,23 @@ const ProgramsPage = () => {
           ))}
         </div>
       ) : filteredPrograms.length === 0 ? (
-        <p className="text-gray-500">No courses found.</p>
+        <div className="flex flex-col items-center justify-center text-center py-20">
+          <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-6">
+            <GraduationCap className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            No courses available
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6">
+            We couldn’t find any courses right now. Try refreshing or check back later.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+          >
+            Refresh
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredPrograms.map((p) => (
