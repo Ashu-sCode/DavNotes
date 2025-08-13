@@ -31,7 +31,7 @@ const ProfileDisplay = ({ profile, uploadedCount, onEdit }) => {
   const firstLetter = profile.fullName
     ? profile.fullName.charAt(0).toUpperCase()
     : "?";
-  
+
   return (
     <div className="flex flex-col items-center  mt-12 space-y-6">
       {/* Profile Card */}
@@ -89,6 +89,7 @@ const ProfilePage = () => {
 
     const fetchProfileAndCount = async () => {
       setLoading(true);
+      
       const docRef = doc(db, "users", currentUser.uid);
       const docSnap = await getDoc(docRef);
 

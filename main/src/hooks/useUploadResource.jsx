@@ -6,7 +6,7 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  increment,
+   increment,
 } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 import { getFriendlyError } from "../utils/getFriendlyError";
@@ -58,9 +58,6 @@ async function compressPDF(file) {
     return file;
   }
 }
-
-
-
 
 export const handleUpload = async ({
   e,
@@ -141,8 +138,8 @@ export const handleUpload = async ({
               fileUrl,
               fileName: cleanFileName,
               storagePath,
-              uploadedBy:  currentUser.uid,
-              fullName: currentUser.fullName || "Anonymous",   
+              uploadedBy: currentUser.uid,
+              fullName: currentUser.fullName || "Anonymous",
               createdAt: serverTimestamp(),
               fileSize: fileItem.size,
             });

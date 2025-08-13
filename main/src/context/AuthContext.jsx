@@ -2,7 +2,6 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  getIdTokenResult,
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/api/firebase";
@@ -13,27 +12,31 @@ import { toast } from "react-hot-toast";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null); // will hold merged user data
-  const [role, setRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); // merged auth + Firestore
+  const [role, setRole] = useState(null); // "admin" | "student" | null
   const [loading, setLoading] = useState(true);
 
-  // 🔐 Secure Login
+  // 🔐 Login with role fetching
   const login = async (email, password) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-      const userDocRef = doc(db, "users", user.uid);
+      // Fetch role from Firestore
+      console.log("user.uid:", user.uid);
+
+      
       const userDoc = await getDoc(userDocRef);
+      console.log("userDoc.exists():", userDoc.exists());
+      
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setCurrentUser({ ...user, ...userData });  // Merge auth user + Firestore data
-        setRole(userData.role || "student");
-        toast.success("Logged in successfully!");
-      } else {
+      if (!userDoc.exists()) {
         throw new Error("User role not found in Firestore.");
       }
+
+      const userData = userDoc.data();
+      setCurrentUser({ ...user, ...userData });
+      setRole(userData.role || "student");
+      toast.success("Logged in successfully!");
     } catch (error) {
       console.error("Login failed:", error);
       toast.error(error.message || "Login failed. Please try again.");
@@ -41,6 +44,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // 🚪 Logout
   const logout = async () => {
     try {
       await signOut(auth);
@@ -53,26 +57,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🔄 Auto-authenticate on auth state change
+  // 🔄 Sync user & role on auth state change
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // Fetch Firestore user profile to get full data
           const userDocRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setCurrentUser({ ...user, ...userData }); // merge firebase auth + firestore
-            setRole(userData.role);
-          } else {
+          if (!userDoc.exists()) {
             throw new Error("User data not found in Firestore.");
           }
+
+          const userData = userDoc.data();
+          setCurrentUser({ ...user, ...userData });
+          setRole(userData.role || null);
         } catch (error) {
-          console.error("Error during auth state sync:", error);
+          console.error("Error during auth sync:", error);
           toast.error("Auth error: Unable to fetch role.");
-          setCurrentUser(user);  // fallback to firebase user object only
+          setCurrentUser(user); // fallback
           setRole(null);
         }
       } else {
@@ -85,14 +88,21 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const contextValue = useMemo(() => ({
-    currentUser,
-    role,
-    login,
-    logout,
-    loading,
-    isAuthenticated: !!currentUser,
-  }), [currentUser, role, loading]);
+  // 🛡 Context value with isAdmin flag
+  const contextValue = useMemo(
+    () => ({
+      currentUser,
+      role,
+      login,
+      logout,
+      loading,
+      isAuthenticated: !!currentUser,
+      isAdmin: role === "admin", // ✅ easily check admin anywhere
+    }),
+    [currentUser, role, loading]
+  );
+
+
 
   return (
     <AuthContext.Provider value={contextValue}>

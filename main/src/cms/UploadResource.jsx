@@ -24,6 +24,7 @@ const UploadResource = () => {
       }
       try {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+
         if (userDoc.exists()) {
           setUserRole(userDoc.data().role);
         }

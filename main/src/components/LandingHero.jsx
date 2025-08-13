@@ -11,10 +11,10 @@ const LandingHero = () => {
         Your one-stop solution for sharing and accessing educational resources, notes, and more!
       </p>
       <Link
-        to="/resources"
+        to="/programs"
         className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg shadow-lg transition"
       >
-        Get Started
+        Download
       </Link>
     </section>
   );

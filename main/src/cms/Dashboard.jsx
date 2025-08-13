@@ -25,6 +25,8 @@ const Dashboard = () => {
         const resourcesSnap = await getDocs(collection(db, "resources"));
         const usersSnap = await getDocs(collection(db, "users"));
 
+      
+
         const today = new Date().toISOString().split("T")[0];
         let todayCount = 0;
         resourcesSnap.forEach((doc) => {

@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-import Pyq from "./pages/Pyq";
 import LoginPage from "./pages/LoginPage";
 
 import Dashboard from "./cms/Dashboard";
@@ -14,6 +13,9 @@ import ManageResources from "./cms/ManageResource";
 import ProfilePage from "./cms/AdminProfile";
 import HomePage from "./pages/HomePage";
 import ProgramsPage from "./pages/ProgramsPage";
+import SemestersPage from "./pages/SemestersPage";
+import SubjectsPage from "./pages/SubjectsPage";
+import ResourcesPage from "./pages/ResourcesPage";
 
 function App() {
   return (
@@ -24,8 +26,20 @@ function App() {
           <Routes>
             {/* pages Routes */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/notes" element={<ProgramsPage />} />
-            <Route path="/pyq" element={<Pyq />} />
+            <Route path="/programs" element={<ProgramsPage />} />
+            <Route path="/program/:programName" element={<SemestersPage />} />
+
+            {/* Step 3: Subjects */}
+            <Route
+              path="/programs/:programName/semesters/:semester/subjects"
+              element={<SubjectsPage />}
+            />
+
+            {/* You can later add YearsPage */}
+            <Route
+              path="/programs/:programName/semesters/:semester/subjects/:subject/resources"
+              element={<ResourcesPage />}
+            />
 
             {/* Admin Routes */}
             <Route
