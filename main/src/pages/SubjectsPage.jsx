@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import SubjectCard from "../components/cards/SubjectCard";
-import { Search } from "lucide-react";
+import { Search, BookOpen } from "lucide-react"; // Added BookOpen icon for empty state
 
 export default function SubjectsPage() {
   const { programName, semester } = useParams();
@@ -42,7 +42,9 @@ export default function SubjectsPage() {
   }, [programName, semester]);
 
   const openSubject = (subject) => {
-    navigate(`/programs/${programName}/semesters/${semester}/subjects/${encodeURIComponent(subject)}/resources`);
+    navigate(
+      `/programs/${programName}/semesters/${semester}/subjects/${encodeURIComponent(subject)}/resources`
+    );
   };
 
   const filteredSubjects = subjects.filter((sub) =>
@@ -63,7 +65,10 @@ export default function SubjectsPage() {
 
       {/* Search bar */}
       <div className="relative mb-8">
-        <Search className="absolute left-3 top-3 dark:text-white text-gray-300" size={18} />
+        <Search
+          className="absolute left-3 top-3 dark:text-white text-gray-300"
+          size={18}
+        />
         <input
           type="text"
           placeholder="Search subjects..."
@@ -73,7 +78,7 @@ export default function SubjectsPage() {
         />
       </div>
 
-      {/* Cards */}
+      {/* Cards or Empty State */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -84,7 +89,19 @@ export default function SubjectsPage() {
           ))}
         </div>
       ) : filteredSubjects.length === 0 ? (
-        <p className="text-gray-500">No subjects found.</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <BookOpen size={48} className="text-gray-400 mb-4" />
+          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            No subjects found
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
+            It seems there are no subjects listed for{" "}
+            <span className="font-medium">
+              {programName} - Semester {semester}
+            </span>
+            . Try adjusting your search or check back later.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSubjects.map((sub) => (

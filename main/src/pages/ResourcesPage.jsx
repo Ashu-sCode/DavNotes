@@ -50,6 +50,10 @@ export default function ResourcesPage() {
     { key: "syllabus", label: "Syllabus" },
   ];
 
+  // Dynamic empty message based on filter
+  const categoryLabel =
+    categories.find((cat) => cat.key === filterType)?.label || "resources";
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
       <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">
@@ -86,11 +90,12 @@ export default function ResourcesPage() {
             <BookOpen className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
           </div>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
-            No resources found
+            No {categoryLabel.toLowerCase()} found
           </h2>
           <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6">
-            There are no notes, assignments, or PYQs for this subject yet.  
-            You can check other categories or come back later.
+            {filterType === "all"
+              ? "There are no resources for this subject yet. Try checking back later."
+              : `There are no ${categoryLabel.toLowerCase()} available for this subject yet.`}
           </p>
           <button
             onClick={() => navigate(-1)}

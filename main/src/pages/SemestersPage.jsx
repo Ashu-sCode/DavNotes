@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
-import { GraduationCap } from "lucide-react"; // nice icon
+import { GraduationCap, FolderOpen } from "lucide-react"; // Added folder icon for empty state
 import SemesterCard from "../components/cards/SemesterCard";
 
 export default function SemestersPage() {
@@ -47,8 +47,6 @@ export default function SemestersPage() {
     navigate(`/programs/${programName}/semesters/${semester}/subjects`);
   };
 
-
-
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
       {/* Header Section */}
@@ -79,7 +77,17 @@ export default function SemestersPage() {
           ))}
         </div>
       ) : semesters.length === 0 ? (
-        <p className="text-gray-500">No semesters found for this program.</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <FolderOpen size={48} className="text-gray-400 mb-4" />
+          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            No semesters found
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
+            It looks like there are no semesters available for{" "}
+            <span className="font-medium">{programName}</span>. Please check
+            back later or contact the admin for updates.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {semesters.map((sem) => (

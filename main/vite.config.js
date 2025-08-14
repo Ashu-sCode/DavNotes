@@ -12,5 +12,8 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
+    allowedHosts: [
+      "3910b9840645.ngrok-free.app", // ngrok domain
+    ],
   },
 });
