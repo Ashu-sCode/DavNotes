@@ -4,6 +4,8 @@ import { Menu, X, LogOut } from "lucide-react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import toast from "react-hot-toast";
 import clsx from "clsx";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../api/firebase";
 import { ThemeContext } from "../context/ThemeContext";
 import ThemeToggle from "./ThemeToggle";
 
@@ -11,20 +13,52 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isUploader, setIsUploader] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { theme } = useContext(ThemeContext);
 
   useEffect(() => {
     const auth = getAuth();
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        setUser(currentUser);
-        setIsAdmin(true);
+        try {
+          const userRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userRef);
+
+          if (userDoc.exists()) {
+            const role = (userDoc.data().role || "").trim().toLowerCase();
+
+            console.log("Fetched user role:", role);
+
+            if (role === "admin") {
+              setIsAdmin(true);
+              setIsUploader(false);
+            } else if (role === "uploader") {
+              setIsUploader(true);
+              setIsAdmin(false);
+            } else {
+              setIsAdmin(false);
+              setIsUploader(false);
+            }
+          } else {
+            console.warn("No user role found for UID:", currentUser.uid);
+            setIsAdmin(false);
+            setIsUploader(false);
+          }
+
+          setUser(currentUser);
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+          setIsAdmin(false);
+          setIsUploader(false);
+        }
       } else {
         setUser(null);
         setIsAdmin(false);
+        setIsUploader(false);
       }
+
       setLoading(false);
     });
 
@@ -37,10 +71,48 @@ export default function Navbar() {
     toast.success("Logged out successfully.");
     setUser(null);
     setIsAdmin(false);
+    setIsUploader(false);
     navigate("/");
   };
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
+
+  const NavLinks = ({ isAdmin, isUploader, onClick }) => (
+    <>
+      <Link
+        to="/"
+        onClick={onClick}
+        className="hover:underline hover:text-gray-300"
+      >
+        Home
+      </Link>
+      <Link
+        to="/programs"
+        onClick={onClick}
+        className="hover:underline hover:text-gray-300"
+      >
+        Resources
+      </Link>
+      {isAdmin && (
+        <Link
+          to="/admin/dashboard"
+          onClick={onClick}
+          className="hover:underline hover:text-gray-300"
+        >
+          Admin Dashboard
+        </Link>
+      )}
+      {isUploader && (
+        <Link
+          to="/uploader/dashboard"
+          onClick={onClick}
+          className="hover:underline hover:text-gray-300"
+        >
+          Uploader Dashboard
+        </Link>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -58,7 +130,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Desktop Nav */}
+            {/* Desktop Menu */}
             <div className="hidden md:flex gap-6 text-sm font-medium items-center">
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -67,14 +139,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <>
-                  <Link to="/" className="hover:underline hover:text-gray-200">Home</Link>
-                  <Link to="/notes" className="hover:underline hover:text-gray-200">Notes</Link>
-                  <Link to="/pyq" className="hover:underline hover:text-gray-200">Question Papers</Link>
-                  {isAdmin && (
-                    <Link to="/admin/dashboard" className="hover:underline hover:text-gray-200">
-                      Admin
-                    </Link>
-                  )}
+                  <NavLinks isAdmin={isAdmin} isUploader={isUploader} />
                   <ThemeToggle />
                   {user && (
                     <button
@@ -88,7 +153,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile Toggle */}
+            {/* Mobile Menu Toggle */}
             <div className="md:hidden flex items-center gap-4">
               <ThemeToggle />
               <button onClick={toggleMenu} aria-label="Toggle Menu">
@@ -99,20 +164,22 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Background Blur */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
-          onClick={toggleMenu}
-        />
-      )}
-
-      {/* Slide-in Mobile Menu (starts below navbar) */}
+      {/* Background Blur with Fade */}
       <div
         className={clsx(
-          "fixed top-16 right-0 h-[calc(100vh-4rem)] w-3/4 max-w-xs z-50 bg-blue-700 dark:bg-gray-800 shadow-lg transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "translate-x-full",
-          "md:hidden"
+          "fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300 ease-in-out",
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        )}
+        onClick={toggleMenu}
+      />
+
+      {/* Slide-in + Fade Mobile Menu */}
+      <div
+        className={clsx(
+          "fixed top-16 right-0 h-[calc(100vh-4rem)] w-3/4 max-w-xs z-50 bg-blue-700 dark:bg-gray-800 shadow-lg transform transition-all duration-300 ease-in-out md:hidden",
+          isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
         )}
       >
         <div className="flex flex-col px-6 py-6 gap-6 text-white font-medium text-base">
@@ -123,28 +190,18 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              <Link to="/" onClick={toggleMenu} className="hover:text-gray-300">
-                Home
-              </Link>
-              <Link to="/notes" onClick={toggleMenu} className="hover:text-gray-300">
-                Notes
-              </Link>
-              <Link to="/pyq" onClick={toggleMenu} className="hover:text-gray-300">
-               Question Papers
-              </Link>
-              {isAdmin && (
-                <Link to="/admin/dashboard" onClick={toggleMenu} className="hover:text-gray-300">
-                  Admin
-                </Link>
-              )}
-              <ThemeToggle />
+              <NavLinks
+                isAdmin={isAdmin}
+                isUploader={isUploader}
+                onClick={toggleMenu}
+              />
               {user && (
                 <button
                   onClick={() => {
                     toggleMenu();
                     handleLogout();
                   }}
-                  className="flex items-center gap-2 text-red-300 hover:text-red-500"
+                  className="flex items-center gap-2 text-red-300 hover:text-red-500 transition"
                 >
                   <LogOut size={18} /> Logout
                 </button>

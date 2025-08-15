@@ -2,20 +2,30 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-import LoginPage from "./pages/LoginPage";
-
-import Dashboard from "./cms/Dashboard";
-import UploadResource from "./cms/UploadResource";
-// import ManageUploads from "./cms/ManageUploads";
-import PrivateRoute from "./routes/PrivateRoute";
-import ManageResources from "./cms/ManageResource";
-
-import ProfilePage from "./cms/AdminProfile";
+// Public pages
 import HomePage from "./pages/HomePage";
 import ProgramsPage from "./pages/ProgramsPage";
 import SemestersPage from "./pages/SemestersPage";
 import SubjectsPage from "./pages/SubjectsPage";
 import ResourcesPage from "./pages/ResourcesPage";
+import NotAuthorized from "./pages/NotAuthorized";
+import NotFoundPage from "./pages/NotFoundPage"; // <-- Create this component
+
+// Auth pages
+import LoginPage from "./pages/LoginPage";
+
+// CMS / Admin pages
+import Dashboard from "./cms/Dashboard";
+import UploadResource from "./cms/UploadResource";
+import ManageResource from "./cms/ManageResource";
+import ManageUsers from "./cms/ManageUsers";
+import AdminProfile from "./cms/AdminProfile";
+
+// Uploader pages
+import DashboardPage from "./pages/uploader/DashboardPage";
+
+// Route protection
+import PrivateRoute from "./routes/PrivateRoute";
 
 function App() {
   return (
@@ -24,36 +34,36 @@ function App() {
         <Navbar />
         <main className="flex-grow">
           <Routes>
-            {/* pages Routes */}
+            {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/programs" element={<ProgramsPage />} />
             <Route path="/program/:programName" element={<SemestersPage />} />
-
-            {/* Step 3: Subjects */}
             <Route
               path="/programs/:programName/semesters/:semester/subjects"
               element={<SubjectsPage />}
             />
-
-            {/* You can later add YearsPage */}
             <Route
               path="/programs/:programName/semesters/:semester/subjects/:subject/resources"
               element={<ResourcesPage />}
             />
+            <Route path="/not-authorized" element={<NotAuthorized />} />
+
+            {/* Auth Route */}
+            <Route path="/admin/login" element={<LoginPage />} />
 
             {/* Admin Routes */}
             <Route
               path="/admin/dashboard"
               element={
-                <PrivateRoute>
+                <PrivateRoute roles={["admin"]}>
                   <Dashboard />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/admin/upload"
+              path="/upload"
               element={
-                <PrivateRoute>
+                <PrivateRoute roles={["admin", "uploader"]}>
                   <UploadResource />
                 </PrivateRoute>
               }
@@ -61,27 +71,40 @@ function App() {
             <Route
               path="/admin/manage"
               element={
-                <PrivateRoute>
-                  <ManageResources />
+                <PrivateRoute roles={["admin"]}>
+                  <ManageResource />
                 </PrivateRoute>
               }
             />
             <Route
-              path="/admin/login"
+              path="/admin/manage-users"
               element={
-                <PrivateRoute>
-                  <LoginPage />
+                <PrivateRoute roles={["admin"]}>
+                  <ManageUsers />
                 </PrivateRoute>
               }
             />
             <Route
               path="/admin/profile"
               element={
-                <PrivateRoute>
-                  <ProfilePage />
+                <PrivateRoute roles={["admin", "uploader"]}>
+                  <AdminProfile />
                 </PrivateRoute>
               }
             />
+
+            {/* Uploader Routes */}
+            <Route
+              path="/uploader/dashboard"
+              element={
+                <PrivateRoute roles={["admin", "uploader"]}>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* 404 Page */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
         <Footer />

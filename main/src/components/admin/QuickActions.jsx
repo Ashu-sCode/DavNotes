@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, PlusCircle, FolderCog } from "lucide-react";
+import { Download, PlusCircle, FolderCog, User } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 const defaultActions = [
@@ -26,6 +26,13 @@ const defaultActions = [
     onClick: async () => {
       toast("📤 Export feature coming soon!", { icon: "⚡" });
     },
+  },
+  {
+    label: "Manage Users",
+    icon: <User size={22} />,
+    color:
+      "bg-purple-600 hover:bg-purple-700 focus-visible:ring-purple-400 active:scale-95 active:bg-purple-800",
+    onClick: (navigate) => navigate("/admin/manage-users"),
   },
 ];
 
@@ -53,9 +60,11 @@ const QuickActions = ({ actions = defaultActions }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-4xl mx-auto">
-      <h2 className="text-xl dark:text-white font-semibold mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg w-full">
+      <h2 className="text-xl dark:text-white font-semibold mb-4">
+        Quick Actions
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full">
         {actions.map(({ label, icon, color }, idx) => (
           <button
             key={label}

@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
       // Fetch role from Firestore
       console.log("user.uid:", user.uid);
 
-      
+      console.log("user.role:", user.role);
       const userDoc = await getDoc(userDocRef);
       console.log("userDoc.exists():", userDoc.exists());
       
@@ -98,6 +98,7 @@ export const AuthProvider = ({ children }) => {
       loading,
       isAuthenticated: !!currentUser,
       isAdmin: role === "admin", // ✅ easily check admin anywhere
+      isUploader: role === "uploader",
     }),
     [currentUser, role, loading]
   );

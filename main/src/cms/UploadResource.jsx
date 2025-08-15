@@ -59,7 +59,7 @@ const UploadResource = () => {
     );
   }
   return (
-    <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-2xl shadow-lg p-6 transition-colors duration-300">
+    <div className="mt-18 text-gray-800 dark:text-gray-100 rounded-2xl shadow-lg p-6 transition-colors duration-300">
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-10 mb-12 transition-opacity duration-500 animate-fadeIn">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-100">
           📤 Upload a New Resource
