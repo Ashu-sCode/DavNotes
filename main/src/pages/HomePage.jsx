@@ -29,7 +29,7 @@ export default function HomePage() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            to="/resources"
+            to="/programs"
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md text-lg font-medium transition"
           >
             Browse Resources

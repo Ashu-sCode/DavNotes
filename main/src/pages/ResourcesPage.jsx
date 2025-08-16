@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import ResourceCard from "../components/cards/ResourceCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ResourcesPage() {
   const { programName, semester, subject } = useParams();
@@ -50,9 +51,20 @@ export default function ResourcesPage() {
     { key: "syllabus", label: "Syllabus" },
   ];
 
-  // Dynamic empty message based on filter
   const categoryLabel =
     categories.find((cat) => cat.key === filterType)?.label || "resources";
+
+  // Framer Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
@@ -105,15 +117,27 @@ export default function ResourcesPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredResources.map((res) => (
-            <ResourceCard
-              key={res.id}
-              resource={res}
-              onDownload={handleDownload}
-            />
-          ))}
-        </div>
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          key={filterType} // important: triggers re-animation on filter change
+        >
+          <AnimatePresence>
+            {filteredResources.map((res) => (
+              <motion.div
+                key={res.id}
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <ResourceCard resource={res} onDownload={handleDownload} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );
