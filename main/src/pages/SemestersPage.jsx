@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
-import { GraduationCap, FolderOpen } from "lucide-react"; // Added folder icon for empty state
+import { GraduationCap, FolderOpen } from "lucide-react";
 import SemesterCard from "../components/cards/SemesterCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SemestersPage() {
   const { programName } = useParams();
@@ -45,6 +46,18 @@ export default function SemestersPage() {
 
   const openSemester = (semester) => {
     navigate(`/programs/${programName}/semesters/${semester}/subjects`);
+  };
+
+  // Framer Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
   };
 
   return (
@@ -89,16 +102,30 @@ export default function SemestersPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {semesters.map((sem) => (
-            <SemesterCard
-              key={sem}
-              semester={sem}
-              icon={<GraduationCap size={28} />}
-              onClick={() => openSemester(sem)}
-            />
-          ))}
-        </div>
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <AnimatePresence>
+            {semesters.map((sem) => (
+              <motion.div
+                key={sem}
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <SemesterCard
+                  semester={sem}
+                  icon={<GraduationCap size={28} />}
+                  onClick={() => openSemester(sem)}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

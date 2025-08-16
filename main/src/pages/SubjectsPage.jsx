@@ -4,7 +4,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import SubjectCard from "../components/cards/SubjectCard";
-import { Search, BookOpen } from "lucide-react"; // Added BookOpen icon for empty state
+import { Search, BookOpen } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SubjectsPage() {
   const { programName, semester } = useParams();
@@ -43,13 +44,27 @@ export default function SubjectsPage() {
 
   const openSubject = (subject) => {
     navigate(
-      `/programs/${programName}/semesters/${semester}/subjects/${encodeURIComponent(subject)}/resources`
+      `/programs/${programName}/semesters/${semester}/subjects/${encodeURIComponent(
+        subject
+      )}/resources`
     );
   };
 
   const filteredSubjects = subjects.filter((sub) =>
     sub.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Framer Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
@@ -103,15 +118,27 @@ export default function SubjectsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSubjects.map((sub) => (
-            <SubjectCard
-              key={sub}
-              subject={sub}
-              onClick={() => openSubject(sub)}
-            />
-          ))}
-        </div>
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          key={search} // re-animates when search changes
+        >
+          <AnimatePresence>
+            {filteredSubjects.map((sub) => (
+              <motion.div
+                key={sub}
+                variants={itemVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <SubjectCard subject={sub} onClick={() => openSubject(sub)} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

@@ -12,7 +12,7 @@ export default function PrivateRoute({ children, roles = [] }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        navigate("/admin/login", { replace: true });
+        navigate("/not-authorized", { replace: true });
         setLoading(false);
         return;
       }
