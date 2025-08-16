@@ -27,6 +27,8 @@ import DashboardPage from "./pages/uploader/DashboardPage";
 // Route protection
 import PrivateRoute from "./routes/PrivateRoute";
 import MyUploads from "./pages/uploader/MyUploads";
+import JoinAsUploader from "./pages/JoinAsUploader";
+import JoinAsUploaderSuccess from "./pages/JoinAsUploaderSuccess";
 
 function App() {
   return (
@@ -48,6 +50,10 @@ function App() {
               element={<ResourcesPage />}
             />
             <Route path="/not-authorized" element={<NotAuthorized />} />
+
+            <Route path="/join-as-uploader" element={<JoinAsUploader />} />
+
+            <Route path="/join-as-uploader/success" element={<JoinAsUploaderSuccess />} />
 
             {/* Auth Route */}
             <Route path="/admin/login" element={<LoginPage />} />
@@ -106,7 +112,7 @@ function App() {
 
             {/* Uploader Routes */}
             <Route
-              path="/uploader/my-uploads"
+              path="/my-uploads"
               element={
                 <PrivateRoute roles={["admin", "uploader"]}>
                   <MyUploads />
