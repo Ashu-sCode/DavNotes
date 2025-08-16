@@ -6,6 +6,7 @@ import { db } from "../api/firebase";
 import SubjectCard from "../components/cards/SubjectCard";
 import { Search, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import DOMPurify from "dompurify"; // For XSS sanitization
 
 export default function SubjectsPage() {
   const { programName, semester } = useParams();
@@ -15,8 +16,10 @@ export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState("");
 
+  // Fetch subjects
   useEffect(() => {
     const fetchSubjects = async () => {
+      setLoading(true);
       try {
         const q = query(
           collection(db, "resources"),
@@ -28,12 +31,13 @@ export default function SubjectsPage() {
         const subjectSet = new Set();
         snapshot.forEach((doc) => {
           const data = doc.data();
-          if (data.subject) subjectSet.add(data.subject);
+          if (data.subject) subjectSet.add(data.subject.trim());
         });
 
         setSubjects(Array.from(subjectSet).sort());
       } catch (error) {
         console.error("Error fetching subjects:", error);
+        alert("Failed to load subjects. Please refresh or try later.");
       } finally {
         setLoading(false);
       }
@@ -43,15 +47,18 @@ export default function SubjectsPage() {
   }, [programName, semester]);
 
   const openSubject = (subject) => {
+    const sanitizedSubject = encodeURIComponent(subject);
     navigate(
-      `/programs/${programName}/semesters/${semester}/subjects/${encodeURIComponent(
-        subject
-      )}/resources`
+      `/programs/${encodeURIComponent(programName)}/semesters/${encodeURIComponent(
+        semester
+      )}/subjects/${sanitizedSubject}/resources`
     );
   };
 
+  // Filter subjects and sanitize search input
+  const sanitizedSearch = DOMPurify.sanitize(search);
   const filteredSubjects = subjects.filter((sub) =>
-    sub.toLowerCase().includes(search.toLowerCase())
+    sub.toLowerCase().includes(sanitizedSearch.toLowerCase())
   );
 
   // Framer Motion variants
@@ -59,7 +66,6 @@ export default function SubjectsPage() {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -71,7 +77,7 @@ export default function SubjectsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 dark:text-gray-50">
-          {programName} - Semester {semester}
+          {DOMPurify.sanitize(programName)} - Semester {DOMPurify.sanitize(semester)}
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           Choose a subject to explore resources.
@@ -88,12 +94,13 @@ export default function SubjectsPage() {
           type="text"
           placeholder="Search subjects..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setSearch(DOMPurify.sanitize(e.target.value))}
           className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 dark:text-white focus:ring-indigo-500"
+          aria-label="Search subjects"
         />
       </div>
 
-      {/* Cards or Empty State */}
+      {/* Loading state */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -110,9 +117,9 @@ export default function SubjectsPage() {
             No subjects found
           </h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
-            It seems there are no subjects listed for{" "}
+            No subjects listed for{" "}
             <span className="font-medium">
-              {programName} - Semester {semester}
+              {DOMPurify.sanitize(programName)} - Semester {DOMPurify.sanitize(semester)}
             </span>
             . Try adjusting your search or check back later.
           </p>
@@ -123,7 +130,7 @@ export default function SubjectsPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          key={search} // re-animates when search changes
+          key={sanitizedSearch} // re-animates when search changes
         >
           <AnimatePresence>
             {filteredSubjects.map((sub) => (
@@ -134,7 +141,10 @@ export default function SubjectsPage() {
                 animate="visible"
                 exit="exit"
               >
-                <SubjectCard subject={sub} onClick={() => openSubject(sub)} />
+                <SubjectCard
+                  subject={DOMPurify.sanitize(sub)}
+                  onClick={() => openSubject(sub)}
+                />
               </motion.div>
             ))}
           </AnimatePresence>

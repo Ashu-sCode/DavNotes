@@ -1,24 +1,31 @@
-// src/components/ProgramCard.jsx
 import React from "react";
+import { motion } from "framer-motion";
 import { programData } from "../../data/data";
 
 const ProgramCard = ({ name, count = 0, onClick }) => {
   const { icon: Icon, image, color } = programData[name] || {};
-  
+
   return (
-    <button
+    <motion.button
       onClick={onClick}
-      className="relative group rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      className="relative group rounded-xl overflow-hidden shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      aria-label={`Open ${name} program with ${count} resource${count !== 1 ? "s" : ""}`}
     >
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${image || "/images/default.jpg"})` }}
       />
-      
+
       {/* Gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-t ${color || "from-gray-900 to-gray-700"} opacity-90`} />
-      
+      <div
+        className={`absolute inset-0 bg-gradient-to-t ${
+          color || "from-gray-900 to-gray-700"
+        } opacity-90`}
+      />
+
       {/* Content */}
       <div className="relative p-6 flex flex-col justify-end h-48">
         {/* Icon Badge */}
@@ -28,12 +35,14 @@ const ProgramCard = ({ name, count = 0, onClick }) => {
           </div>
         )}
         <h3 className="text-lg font-bold text-white">{name}</h3>
-        <p className="text-sm text-gray-200">{count} resource{count !== 1 ? "s" : ""}</p>
+        <p className="text-sm text-gray-200">
+          {count} resource{count !== 1 ? "s" : ""}
+        </p>
       </div>
 
       {/* Hover Glow */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-white transition-opacity duration-300" />
-    </button>
+    </motion.button>
   );
 };
 

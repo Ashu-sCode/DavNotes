@@ -15,7 +15,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
+    <div className="min-h-screen mt-6 flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
       {/* Hero Section */}
       <section className="flex-1 flex flex-col justify-center items-center px-6 py-16">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-700 dark:text-blue-400 mb-6">
@@ -35,14 +35,7 @@ export default function HomePage() {
             Browse Resources
           </Link>
 
-          {!user && (
-            <Link
-              to="/join-as-uploader"
-              className="px-6 py-3 border border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg text-lg font-medium hover:bg-blue-50 dark:hover:bg-gray-800 transition"
-            >
-              Join as Uploader 🚀
-            </Link>
-          )}
+  
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import ResourceCard from "../components/cards/ResourceCard";
 import { motion, AnimatePresence } from "framer-motion";
+import DOMPurify from "dompurify";
 
 export default function ResourcesPage() {
   const { programName, semester, subject } = useParams();
@@ -12,6 +13,14 @@ export default function ResourcesPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("all");
   const navigate = useNavigate();
+
+  const categories = [
+    { key: "all", label: "All" },
+    { key: "notes", label: "Notes" },
+    { key: "pyq", label: "PYQ" },
+    { key: "assignment", label: "Assignments" },
+    { key: "syllabus", label: "Syllabus" },
+  ];
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -24,13 +33,16 @@ export default function ResourcesPage() {
           where("subject", "==", subject)
         );
         const snap = await getDocs(q);
-        setResources(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        const fetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setResources(fetched);
       } catch (err) {
         console.error("Error fetching resources:", err);
+        alert("Failed to load resources. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchResources();
   }, [programName, semester, subject]);
 
@@ -38,28 +50,21 @@ export default function ResourcesPage() {
     window.open(url, "_blank");
   };
 
-  const filteredResources =
-    filterType === "all"
-      ? resources
-      : resources.filter((r) => r.category === filterType);
+  const sanitizedFilterType = DOMPurify.sanitize(filterType);
 
-  const categories = [
-    { key: "all", label: "All" },
-    { key: "notes", label: "Notes" },
-    { key: "pyq", label: "PYQ" },
-    { key: "assignment", label: "Assignments" },
-    { key: "syllabus", label: "Syllabus" },
-  ];
+  const filteredResources =
+    sanitizedFilterType === "all"
+      ? resources
+      : resources.filter((r) => r.category === sanitizedFilterType);
 
   const categoryLabel =
-    categories.find((cat) => cat.key === filterType)?.label || "resources";
+    categories.find((cat) => cat.key === sanitizedFilterType)?.label || "resources";
 
   // Framer Motion variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -69,24 +74,28 @@ export default function ResourcesPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
       <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">
-        {subject} Resources
+        {DOMPurify.sanitize(subject)} Resources
       </h1>
 
       {/* Filter Pills */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        {categories.map((cat) => (
-          <button
-            key={cat.key}
-            onClick={() => setFilterType(cat.key)}
-            className={`px-4 py-2 rounded-full border transition-all ${
-              filterType === cat.key
-                ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap justify-start gap-3 mb-6">
+        {categories.map((cat) => {
+          const isActive = sanitizedFilterType === cat.key;
+          return (
+            <button
+              key={cat.key}
+              onClick={() => setFilterType(cat.key)}
+              className={`px-4 py-2 rounded-full border text-sm transition-all flex-1 min-w-[90px] text-center ${
+                isActive
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+              aria-pressed={isActive}
+            >
+              {cat.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}
@@ -105,7 +114,7 @@ export default function ResourcesPage() {
             No {categoryLabel.toLowerCase()} found
           </h2>
           <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6">
-            {filterType === "all"
+            {sanitizedFilterType === "all"
               ? "There are no resources for this subject yet. Try checking back later."
               : `There are no ${categoryLabel.toLowerCase()} available for this subject yet.`}
           </p>
@@ -122,7 +131,7 @@ export default function ResourcesPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          key={filterType} // important: triggers re-animation on filter change
+          key={sanitizedFilterType} // triggers re-animation on filter change
         >
           <AnimatePresence>
             {filteredResources.map((res) => (
@@ -133,7 +142,15 @@ export default function ResourcesPage() {
                 animate="visible"
                 exit="exit"
               >
-                <ResourceCard resource={res} onDownload={handleDownload} />
+                <ResourceCard
+                  resource={{
+                    ...res,
+                    subject: DOMPurify.sanitize(res.subject),
+                    category: DOMPurify.sanitize(res.category),
+                    title: DOMPurify.sanitize(res.title),
+                  }}
+                  onDownload={handleDownload}
+                />
               </motion.div>
             ))}
           </AnimatePresence>

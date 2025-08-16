@@ -29,6 +29,10 @@ import PrivateRoute from "./routes/PrivateRoute";
 import MyUploads from "./pages/uploader/MyUploads";
 import JoinAsUploader from "./pages/JoinAsUploader";
 import JoinAsUploaderSuccess from "./pages/JoinAsUploaderSuccess";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+
+
 
 function App() {
   return (
@@ -49,11 +53,16 @@ function App() {
               path="/programs/:programName/semesters/:semester/subjects/:subject/resources"
               element={<ResourcesPage />}
             />
-            <Route path="/not-authorized" element={<NotAuthorized />} />
 
+            {/* Join as Uploader */}
             <Route path="/join-as-uploader" element={<JoinAsUploader />} />
+            <Route
+              path="/join-as-uploader/success"
+              element={<JoinAsUploaderSuccess />}
+            />
 
-            <Route path="/join-as-uploader/success" element={<JoinAsUploaderSuccess />} />
+            {/* Private Routes */}
+            <Route path="/not-authorized" element={<NotAuthorized />} />
 
             {/* Auth Route */}
             <Route path="/admin/login" element={<LoginPage />} />
@@ -92,7 +101,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/profile"
+              path="/profile"
               element={
                 <PrivateRoute roles={["admin", "uploader"]}>
                   <AdminProfile />
@@ -120,9 +129,14 @@ function App() {
               }
             />
 
+            <Route path="/contact" element={<ContactPage />} />
+
+            <Route path="/about" element={<AboutPage />} />
+
             {/* 404 Page */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+    
         </main>
         <Footer />
       </div>
