@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
@@ -11,11 +12,11 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isUploader, setIsUploader] = useState(false);
+  const [role, setRole] = useState(""); // admin, uploader, or ""
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Listen for auth state changes and fetch role
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -23,27 +24,17 @@ export default function Navbar() {
         try {
           const userRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) {
-            const role = (userDoc.data().role || "").trim().toLowerCase();
-            if (role === "admin") {
-              setIsAdmin(true);
-              setIsUploader(false);
-            } else if (role === "uploader") {
-              setIsUploader(true);
-              setIsAdmin(false);
-            } else {
-              setIsAdmin(false);
-              setIsUploader(false);
-            }
-          }
+          const userRole = userDoc.exists()
+            ? (userDoc.data().role || "").trim().toLowerCase()
+            : "";
+          setRole(userRole);
           setUser(currentUser);
         } catch (error) {
           console.error("Error fetching user role:", error);
         }
       } else {
         setUser(null);
-        setIsAdmin(false);
-        setIsUploader(false);
+        setRole("");
       }
       setLoading(false);
     });
@@ -55,59 +46,28 @@ export default function Navbar() {
     await signOut(auth);
     toast.success("Logged out successfully.");
     setUser(null);
-    setIsAdmin(false);
-    setIsUploader(false);
+    setRole("");
     navigate("/");
   };
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
 
-  const NavLinks = ({ isAdmin, isUploader, onClick }) => (
-    <>
-      <Link
-        to="/"
-        onClick={onClick}
-        className="hover:underline hover:text-gray-300"
-      >
-        Home
-      </Link>
-      <Link
-        to="/programs"
-        onClick={onClick}
-        className="hover:underline hover:text-gray-300"
-      >
-        Resources
-      </Link>
-      {isAdmin && (
-        <Link
-          to="/admin/dashboard"
-          onClick={onClick}
-          className="hover:underline hover:text-gray-300"
-        >
-          Admin Dashboard
-        </Link>
-      )}
-      {isUploader && (
-        <Link
-          to="/uploader/dashboard"
-          onClick={onClick}
-          className="hover:underline hover:text-gray-300"
-        >
-          Uploader Dashboard
-        </Link>
-      )}
-    </>
-  );
+  const navLinks = [
+    { label: "Home", to: "/" },
+    { label: "Resources", to: "/programs" },
+    ...(role === "admin" ? [{ label: "Admin Dashboard", to: "/admin/dashboard" }] : []),
+    ...(role === "uploader" ? [{ label: "Uploader Dashboard", to: "/uploader/dashboard" }] : []),
+  ];
 
   return (
     <>
       {/* Navbar */}
-      <nav className="bg-blue-600  dark:bg-gray-900 text-white shadow-md fixed w-full z-50 top-0">
+      <nav className="bg-blue-600 dark:bg-gray-900 text-white shadow-md fixed w-full z-50 top-0 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="text-xl font-bold tracking-wide">
-              <Link to="/" className="hover:text-gray-200 transition">
+              <Link to="/" className="hover:text-gray-200 transition-colors">
                 DavNotes
               </Link>
             </div>
@@ -121,7 +81,15 @@ export default function Navbar() {
                 </div>
               ) : (
                 <>
-                  <NavLinks isAdmin={isAdmin} isUploader={isUploader} />
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      className="hover:underline hover:text-gray-300 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
                   <ThemeToggle />
                   {user && (
                     <button
@@ -146,11 +114,11 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* AnimatePresence handles unmount animation */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Background Overlay */}
+            {/* Overlay */}
             <motion.div
               key="overlay"
               initial={{ opacity: 0 }}
@@ -161,8 +129,7 @@ export default function Navbar() {
               onClick={toggleMenu}
             />
 
-            {/* Slide-in Mobile Menu */}
-            {/* Slide-in Mobile Menu */}
+            {/* Slide-in Menu */}
             <motion.div
               key="mobileMenu"
               initial={{ x: "100%", opacity: 0 }}
@@ -177,10 +144,7 @@ export default function Navbar() {
                 animate="visible"
                 variants={{
                   hidden: { opacity: 1 },
-                  visible: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1, delayChildren: 0.05 },
-                  },
+                  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
                 }}
               >
                 {loading ? (
@@ -190,47 +154,21 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <>
-                    {/* Menu Links with fade + slide animation */}
-                    {[
-                      { label: "Home", to: "/" },
-                      { label: "Resources", to: "/programs" },
-                      ...(isAdmin
-                        ? [{ label: "Admin Dashboard", to: "/admin/dashboard" }]
-                        : []),
-                      ...(isUploader
-                        ? [
-                            {
-                              label: "Uploader Dashboard",
-                              to: "/uploader/dashboard",
-                            },
-                          ]
-                        : []),
-                    ].map((link, i) => (
+                    {navLinks.map((link) => (
                       <motion.div
                         key={link.to}
-                        variants={{
-                          hidden: { opacity: 0, y: 15 },
-                          visible: { opacity: 1, y: 0 },
-                        }}
+                        variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Link
-                          to={link.to}
-                          onClick={toggleMenu}
-                          className="hover:underline hover:text-gray-300"
-                        >
+                        <Link to={link.to} onClick={toggleMenu} className="hover:underline hover:text-gray-300">
                           {link.label}
                         </Link>
                       </motion.div>
                     ))}
 
-                    {/* Logout Button */}
                     {user && (
                       <motion.div
-                        variants={{
-                          hidden: { opacity: 0, y: 15 },
-                          visible: { opacity: 1, y: 0 },
-                        }}
+                        variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
                         transition={{ duration: 0.3 }}
                       >
                         <button

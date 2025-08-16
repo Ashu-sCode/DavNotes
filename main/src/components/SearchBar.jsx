@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, XCircle } from "lucide-react";
+import DOMPurify from "dompurify";
 import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
-import { db } from "../api/firebase"; // your firebase config file
+import { db } from "../api/firebase";
 
 const SearchBar = ({
   searchTerm,
@@ -18,32 +19,27 @@ const SearchBar = ({
 }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef(null);
   const [debouncedTerm, setDebouncedTerm] = useState(searchTerm);
 
-  // Debounce input so we don’t query on every keystroke
+  // Debounce input
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedTerm(searchTerm.trim());
-    }, 400);
-
+    const handler = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 400);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // Firestore live fetch for autocomplete suggestions based on debouncedTerm
+  // Fetch suggestions from Firestore
   useEffect(() => {
-    if (debouncedTerm === "") {
+    if (!debouncedTerm) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
-    async function fetchSuggestions() {
+    const fetchSuggestions = async () => {
       try {
-        // Firestore collection ref
         const resourcesRef = collection(db, "resources");
-
-        // Prefix query for titles starting with debouncedTerm (case insensitive trick)
         const q = query(
           resourcesRef,
           orderBy("title"),
@@ -52,38 +48,33 @@ const SearchBar = ({
           limit(5)
         );
 
-        const querySnapshot = await getDocs(q);
-        const titles = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.title) {
-            titles.push(data.title);
-          }
-        });
-
+        const snapshot = await getDocs(q);
+        const titles = snapshot.docs
+          .map((doc) => doc.data().title)
+          .filter(Boolean);
         setSuggestions(titles);
         setShowSuggestions(titles.length > 0);
+        setActiveIndex(-1);
       } catch (error) {
-        console.error("Error fetching autocomplete suggestions:", error);
+        console.error("Error fetching suggestions:", error);
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }
+    };
 
     fetchSuggestions();
   }, [debouncedTerm]);
 
   // Close dropdown on outside click
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
         setShowSuggestions(false);
+        setActiveIndex(-1);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleClearFilters = () => {
@@ -92,20 +83,53 @@ const SearchBar = ({
     setFilterProgram("");
     setFilterSubject("");
     setShowSuggestions(false);
+    setActiveIndex(-1);
   };
 
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
     setShowSuggestions(false);
+    setActiveIndex(-1);
   };
 
-  const hasActiveFilters =
-    searchTerm || filterCategory || filterProgram || filterSubject;
+  const handleKeyDown = (e) => {
+    if (!showSuggestions) return;
+
+    if (e.key === "ArrowDown") {
+      setActiveIndex((prev) => (prev + 1) % suggestions.length);
+      e.preventDefault();
+    } else if (e.key === "ArrowUp") {
+      setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+      e.preventDefault();
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      handleSuggestionClick(suggestions[activeIndex]);
+      e.preventDefault();
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setActiveIndex(-1);
+    }
+  };
+
+  const hasActiveFilters = searchTerm || filterCategory || filterProgram || filterSubject;
+
+  // Highlight matched term
+  const highlightMatch = (text, term) => {
+    if (!term) return DOMPurify.sanitize(text);
+    const regex = new RegExp(`(${term})`, "gi");
+    const parts = text.split(regex);
+    return parts
+      .map((part, idx) =>
+        regex.test(part)
+          ? `<span class="bg-yellow-300 dark:bg-yellow-500 font-semibold">${DOMPurify.sanitize(part)}</span>`
+          : DOMPurify.sanitize(part)
+      )
+      .join("");
+  };
 
   return (
     <div
-      className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-6 transition-colors duration-300 relative"
       ref={wrapperRef}
+      className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-6 transition-colors duration-300 relative"
     >
       <div className="flex flex-col md:flex-row gap-4 md:items-center">
         {/* Search Input */}
@@ -123,24 +147,31 @@ const SearchBar = ({
                        focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label="Search resources"
-            onFocus={() => {
-              if (suggestions.length > 0) setShowSuggestions(true);
-            }}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            onKeyDown={handleKeyDown}
             autoComplete="off"
+            aria-label="Search resources"
           />
 
-          {/* Suggestions dropdown */}
+          {/* Suggestions Dropdown */}
           {showSuggestions && (
-            <ul className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-lg">
-              {suggestions.map((suggestion, idx) => (
+            <ul
+              role="listbox"
+              className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-lg"
+            >
+              {suggestions.map((s, idx) => (
                 <li
                   key={idx}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="cursor-pointer px-4 py-2 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500"
-                >
-                  {suggestion}
-                </li>
+                  role="option"
+                  aria-selected={idx === activeIndex}
+                  onClick={() => handleSuggestionClick(s)}
+                  className={`cursor-pointer px-4 py-2 transition ${
+                    idx === activeIndex
+                      ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                      : "hover:bg-indigo-100 hover:text-gray-900 dark:hover:bg-indigo-600 dark:hover:text-white"
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: highlightMatch(s, searchTerm) }}
+                />
               ))}
             </ul>
           )}
@@ -156,9 +187,7 @@ const SearchBar = ({
           >
             <option value="">All Categories</option>
             {allCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
+              <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
 
@@ -170,9 +199,7 @@ const SearchBar = ({
           >
             <option value="">All Programs</option>
             {allPrograms.map((prog) => (
-              <option key={prog} value={prog}>
-                {prog}
-              </option>
+              <option key={prog} value={prog}>{prog}</option>
             ))}
           </select>
 
@@ -184,9 +211,7 @@ const SearchBar = ({
           >
             <option value="">All Subjects</option>
             {allSubjects.map((sub) => (
-              <option key={sub} value={sub}>
-                {sub}
-              </option>
+              <option key={sub} value={sub}>{sub}</option>
             ))}
           </select>
         </div>
