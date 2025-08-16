@@ -106,8 +106,8 @@ export default function JoinAsUploader() {
   const steps = ["Personal Info", "Contact", "Education", "Message"];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
-      <Toaster position="top-right" reverseOrder={false} />
+    <div className="min-h-screen mt-12 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+   
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

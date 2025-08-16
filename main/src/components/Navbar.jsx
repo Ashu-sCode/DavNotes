@@ -102,7 +102,7 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar */}
-      <nav className="bg-blue-600 dark:bg-gray-900 text-white shadow-md fixed w-full z-50 top-0">
+      <nav className="bg-blue-600  dark:bg-gray-900 text-white shadow-md fixed w-full z-50 top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
