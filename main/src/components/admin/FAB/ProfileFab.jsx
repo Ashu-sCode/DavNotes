@@ -6,7 +6,7 @@ const ProfileFab = () => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate("/admin/profile");
+    navigate("/profile");
   };
 
   return (

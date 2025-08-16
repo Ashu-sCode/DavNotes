@@ -34,6 +34,7 @@ import ContactPage from "./pages/ContactPage";
 
 
 
+
 function App() {
   return (
     <Router>
@@ -61,6 +62,7 @@ function App() {
               element={<JoinAsUploaderSuccess />}
             />
 
+  
             {/* Private Routes */}
             <Route path="/not-authorized" element={<NotAuthorized />} />
 

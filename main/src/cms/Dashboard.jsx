@@ -1,13 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../api/firebase";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  onSnapshot,
+  getCountFromServer,
+} from "firebase/firestore";
 import StatsCards from "../components/admin/StatsCards";
 import RecentUploadsTable from "../components/admin/RecentUploadsTable";
 import QuickActions from "../components/admin/QuickActions";
 import FloatingUploadButton from "../components/admin/FAB/FloatingUploadButton";
-import Spinner from "../utils/Spinner"; // ✅ Your spinner component
 import ProfileFab from "../components/admin/FAB/ProfileFab";
+import { toast } from "react-hot-toast";
 
+// ----------------------------
+// Skeleton Components
+// ----------------------------
+const StatsSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    {[1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
+      ></div>
+    ))}
+  </div>
+);
+
+const TableSkeleton = () => (
+  <div className="space-y-3">
+    {[1, 2, 3, 4, 5].map((i) => (
+      <div
+        key={i}
+        className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full"
+      ></div>
+    ))}
+  </div>
+);
+
+// ----------------------------
+// Dashboard Component
+// ----------------------------
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalResources: 0,
@@ -18,108 +53,94 @@ const Dashboard = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [uploadsLoading, setUploadsLoading] = useState(true);
 
+  // ------------------------------
+  // Fetch stats using Firestore count aggregation
+  // ------------------------------
   useEffect(() => {
     const fetchStats = async () => {
       setStatsLoading(true);
       try {
-        const resourcesSnap = await getDocs(collection(db, "resources"));
-        const usersSnap = await getDocs(collection(db, "users"));
+        const resourcesCountSnap = await getCountFromServer(
+          collection(db, "resources")
+        );
+        const usersCountSnap = await getCountFromServer(
+          collection(db, "users")
+        );
 
-      
-
-        const today = new Date().toISOString().split("T")[0];
-        let todayCount = 0;
-        resourcesSnap.forEach((doc) => {
-          const date = doc
-            .data()
-            .createdAt?.toDate()
-            .toISOString()
-            .split("T")[0];
-          if (date === today) todayCount++;
-        });
-
+        // TODO: Replace 0 with proper daily uploads count (via query or cloud function)
         setStats({
-          totalResources: resourcesSnap.size,
-          totalUsers: usersSnap.size,
-          todaysUploads: todayCount,
+          totalResources: resourcesCountSnap.data().count,
+          totalUsers: usersCountSnap.data().count,
+          todaysUploads: 0,
         });
       } catch (err) {
         console.error("Error fetching stats:", err);
+        toast.error("Failed to load stats.");
       } finally {
         setStatsLoading(false);
       }
     };
 
-    const fetchRecentUploads = async () => {
-      setUploadsLoading(true);
-      try {
-        const q = query(
-          collection(db, "resources"),
-          orderBy("createdAt", "desc"),
-          limit(5)
-        );
-        const recentSnap = await getDocs(q);
-        setRecentUploads(
-          recentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
-      } catch (err) {
-        console.error("Error fetching recent uploads:", err);
-      } finally {
-        setUploadsLoading(false);
-      }
-    };
-
     fetchStats();
-    fetchRecentUploads();
+  }, []);
+
+  // ------------------------------
+  // Fetch recent uploads (real-time)
+  // ------------------------------
+  useEffect(() => {
+    setUploadsLoading(true);
+    try {
+      const q = query(
+        collection(db, "resources"),
+        orderBy("createdAt", "desc"),
+        limit(5)
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          setRecentUploads(
+            snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+          );
+          setUploadsLoading(false);
+        },
+        (error) => {
+          console.error("Error fetching recent uploads:", error);
+          toast.error("Failed to load recent uploads.");
+          setUploadsLoading(false);
+        }
+      );
+
+      return () => unsubscribe();
+    } catch (err) {
+      console.error(err);
+      setUploadsLoading(false);
+      toast.error("Failed to fetch recent uploads.");
+    }
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+    <div className="p-6 space-y-6 min-h-screen">
+      <h1 className="text-3xl font-bold dark:text-white">Admin Dashboard</h1>
 
       {/* Stats Section */}
-      <div className="relative min-h-[100px]">
-        {/* Loader */}
-        <div
-          className={`absolute inset-0 flex justify-center items-center transition-opacity duration-500 ${
-            statsLoading ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <Spinner size={40} />
-        </div>
-
-        {/* Content */}
-        <div
-          className={`transition-opacity duration-500 delay-100 ${
-            statsLoading ? "opacity-0" : "opacity-100"
-          }`}
-        >
-          <StatsCards stats={stats} />
-        </div>
+      <div>
+        {statsLoading ? <StatsSkeleton /> : <StatsCards stats={stats} />}
       </div>
 
+      {/* Quick Actions */}
       <QuickActions />
 
       {/* Recent Uploads Section */}
-      <div className="relative min-h-[200px]">
-        {/* Loader */}
-        <div
-          className={`absolute inset-0 flex justify-center items-center transition-opacity duration-500 ${
-            uploadsLoading ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <Spinner size={40} />
-        </div>
-
-        {/* Content */}
-        <div
-          className={`transition-opacity duration-500 delay-100 ${
-            uploadsLoading ? "opacity-0" : "opacity-100"
-          }`}
-        >
+      <div>
+        {uploadsLoading ? (
+          <TableSkeleton />
+        ) : (
           <RecentUploadsTable data={recentUploads} />
-        </div>
+        )}
       </div>
+
+      {/* Floating FABs */}
       <ProfileFab />
       <FloatingUploadButton />
     </div>

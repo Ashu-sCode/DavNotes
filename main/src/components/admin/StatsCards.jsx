@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { collection, doc, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "../../api/firebase";
 
 const StatsCards = () => {
   const [stats, setStats] = useState({
     totalResources: 0,
     todaysUploads: 0,
-    totalDownloads: 0,
+    totalUsers: 0,
     storageBytes: 0,
   });
 
@@ -14,9 +14,9 @@ const StatsCards = () => {
 
   useEffect(() => {
     const resourcesRef = collection(db, "resources");
-    const statsDocRef = doc(db, "appStats", "global"); // your global stats doc
+    const usersRef = collection(db, "users");
 
-    // Listen for resource-related stats except downloads
+    // Listen for resource-related stats
     const unsubscribeResources = onSnapshot(resourcesRef, (snapshot) => {
       let totalResources = 0;
       let todaysUploads = 0;
@@ -44,24 +44,20 @@ const StatsCards = () => {
         todaysUploads,
         storageBytes: totalBytes,
       }));
-
-      setLoading(false);
     });
 
-    // Listen for global download count from separate doc
-    const unsubscribeStats = onSnapshot(statsDocRef, (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        setStats((prev) => ({
-          ...prev,
-          totalDownloads: data.totalDownloads || 0,
-        }));
-      }
+    // Listen for total users
+    const unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+      setStats((prev) => ({
+        ...prev,
+        totalUsers: snapshot.size, // total users
+      }));
+      setLoading(false);
     });
 
     return () => {
       unsubscribeResources();
-      unsubscribeStats();
+      unsubscribeUsers();
     };
   }, []);
 
@@ -77,7 +73,7 @@ const StatsCards = () => {
   const cards = [
     { title: "Total Resources", value: stats.totalResources },
     { title: "Today's Uploads", value: stats.todaysUploads },
-    { title: "Total Downloads", value: stats.totalDownloads },
+    { title: "Total Users", value: stats.totalUsers },
     { title: "Storage Used", value: formatBytes(stats.storageBytes) },
   ];
 
