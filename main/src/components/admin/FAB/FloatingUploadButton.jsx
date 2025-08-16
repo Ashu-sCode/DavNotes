@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 export default function FloatingUploadButton() {
   return (
     <Link
-      to="/admin/upload"
+      to="/upload"
       className="
         fixed bottom-6 right-6
         bg-blue-600 hover:bg-blue-700

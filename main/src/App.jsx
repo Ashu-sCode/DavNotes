@@ -26,6 +26,7 @@ import DashboardPage from "./pages/uploader/DashboardPage";
 
 // Route protection
 import PrivateRoute from "./routes/PrivateRoute";
+import MyUploads from "./pages/uploader/MyUploads";
 
 function App() {
   return (
@@ -99,6 +100,16 @@ function App() {
               element={
                 <PrivateRoute roles={["admin", "uploader"]}>
                   <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Uploader Routes */}
+            <Route
+              path="/uploader/my-uploads"
+              element={
+                <PrivateRoute roles={["admin", "uploader"]}>
+                  <MyUploads />
                 </PrivateRoute>
               }
             />
