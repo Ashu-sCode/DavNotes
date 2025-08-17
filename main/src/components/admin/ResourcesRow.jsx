@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Edit3, Trash2, Download } from "lucide-react";
-import { doc, runTransaction, increment } from "firebase/firestore";
-import { db } from "../../api/firebase";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "-";
@@ -13,65 +12,39 @@ const formatBytes = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 };
 
-const ResourceRow = ({
-  resource,
-  onEdit,
-  onDelete,
-  isSelected,
-  toggleSelect,
-}) => {
-  // Handle download and increment downloadCount in Firestore
-  const handleDownloadClick = async (e) => {
+const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) => {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadClick = (e) => {
     e.preventDefault();
+    if (!resource.fileUrl) return toast.error("Download URL not available.");
+    if (downloading) return;
 
-    if (!resource.fileUrl) {
-      toast.error("Download URL not available.");
-      return;
-    }
+    setDownloading(true);
     try {
-      const resourceRef = doc(db, "resources", resource.id);
-      const statsDocRef = doc(db, "appStats", "global");
-
-      await runTransaction(db, async (transaction) => {
-        const resourceDoc = await transaction.get(resourceRef);
-        const statsDoc = await transaction.get(statsDocRef);
-
-        if (!resourceDoc.exists()) {
-          throw new Error("Resource not found!");
-        }
-
-        // Increment resource download count or set to 1 if missing
-        const currentResourceDownloads = resourceDoc.data().downloadCount || 0;
-        transaction.update(resourceRef, {
-          downloadCount: currentResourceDownloads + 1,
-        });
-
-        // Increment global totalDownloads or set to 1 if missing
-        const currentTotalDownloads = statsDoc.exists()
-          ? statsDoc.data().totalDownloads || 0
-          : 0;
-
-        transaction.set(
-          statsDocRef,
-          { totalDownloads: currentTotalDownloads + 1 },
-          { merge: true }
-        );
-      });
-
-      // Trigger actual file download in a new tab
+      // Open file in new tab
       window.open(resource.fileUrl, "_blank");
     } catch (error) {
-      console.error("Error updating download count:", error);
-      toast.error("Failed to update download count.");
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download file.");
+    } finally {
+      setDownloading(false);
     }
   };
 
   return (
-    <tr
-      className={`border-b border-gray-300 dark:border-gray-600 ${
-        isSelected ? "bg-indigo-100 dark:bg-indigo-900" : ""
+    <motion.tr
+      layout
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      className={`border-b border-gray-300 dark:border-gray-600 transition-colors duration-200 ease-in-out ${
+        isSelected
+          ? "bg-indigo-100 dark:bg-indigo-800/80"
+          : "hover:bg-gray-100 dark:hover:bg-gray-700"
       }`}
-      key={resource.id}
+      tabIndex={0}
+      aria-selected={isSelected}
     >
       {/* Selection Checkbox */}
       <td className="p-3">
@@ -84,27 +57,37 @@ const ResourceRow = ({
         />
       </td>
 
-      <td className="p-3">{resource.title}</td>
-      <td className="p-3">{resource.category}</td>
-      <td className="p-3">{resource.program}</td>
+      <td className="p-3 truncate max-w-[150px]" title={resource.title}>
+        {resource.title}
+      </td>
+      <td className="p-3 truncate max-w-[120px]" title={resource.category}>
+        {resource.category}
+      </td>
+      <td className="p-3 truncate max-w-[120px]" title={resource.program}>
+        {resource.program}
+      </td>
       <td className="p-3">{resource.year}</td>
-      <td className="p-3">{resource.subject}</td>
+      <td className="p-3 truncate max-w-[120px]" title={resource.subject}>
+        {resource.subject}
+      </td>
       <td className="p-3">{formatBytes(resource.fileSize)}</td>
       <td className="p-3">
         {resource.createdAt
           ? resource.createdAt.toDate().toLocaleDateString()
           : "-"}
       </td>
-      <td className="p-3 text-right flex gap-2 justify-end">
+
+      {/* Actions */}
+      <td className="p-3 flex gap-2 justify-end">
         <button
-          className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
           onClick={() => onEdit(resource)}
           aria-label={`Edit ${resource.title || "resource"}`}
         >
           <Edit3 size={16} />
         </button>
         <button
-          className="p-2 bg-red-500 text-white rounded hover:bg-red-600"
+          className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
           onClick={() => onDelete(resource)}
           aria-label={`Delete ${resource.title || "resource"}`}
         >
@@ -112,14 +95,42 @@ const ResourceRow = ({
         </button>
         <button
           onClick={handleDownloadClick}
-          className="p-2 bg-green-600 text-white rounded hover:bg-green-700"
+          disabled={downloading}
+          className={`p-2 rounded text-white transition ${
+            downloading
+              ? "bg-green-600/50 cursor-wait"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
           aria-label={`Download ${resource.title || "resource"}`}
           title={`Download ${resource.title || "resource"}`}
         >
-          <Download size={16} />
+          {downloading ? (
+            <svg
+              className="animate-spin h-5 w-5 mx-auto"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              ></path>
+            </svg>
+          ) : (
+            <Download size={16} />
+          )}
         </button>
       </td>
-    </tr>
+    </motion.tr>
   );
 };
 
