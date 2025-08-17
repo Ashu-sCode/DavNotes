@@ -12,22 +12,17 @@ import { toast } from "react-hot-toast";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null); // merged auth + Firestore
-  const [role, setRole] = useState(null); // "admin" | "student" | null
+  const [currentUser, setCurrentUser] = useState(null);
+  const [role, setRole] = useState(null); // "admin" | "uploader" | "student"
   const [loading, setLoading] = useState(true);
 
-  // 🔐 Login with role fetching
+  // 🔐 Login
   const login = async (email, password) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-      // Fetch role from Firestore
-      console.log("user.uid:", user.uid);
-
-      console.log("user.role:", user.role);
+      const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
-      console.log("userDoc.exists():", userDoc.exists());
-      
 
       if (!userDoc.exists()) {
         throw new Error("User role not found in Firestore.");
@@ -36,7 +31,9 @@ export const AuthProvider = ({ children }) => {
       const userData = userDoc.data();
       setCurrentUser({ ...user, ...userData });
       setRole(userData.role || "student");
+
       toast.success("Logged in successfully!");
+      return userData.role;
     } catch (error) {
       console.error("Login failed:", error);
       toast.error(error.message || "Login failed. Please try again.");
@@ -57,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🔄 Sync user & role on auth state change
+  // 🔄 Sync auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -88,7 +85,7 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // 🛡 Context value with isAdmin flag
+  // 🛡 Context value
   const contextValue = useMemo(
     () => ({
       currentUser,
@@ -97,19 +94,13 @@ export const AuthProvider = ({ children }) => {
       logout,
       loading,
       isAuthenticated: !!currentUser,
-      isAdmin: role === "admin", // ✅ easily check admin anywhere
+      isAdmin: role === "admin",
       isUploader: role === "uploader",
     }),
     [currentUser, role, loading]
   );
 
-
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);
