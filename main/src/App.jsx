@@ -1,39 +1,51 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+// App.jsx
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
-// Public pages
-import HomePage from "./pages/HomePage";
-import ProgramsPage from "./pages/ProgramsPage";
-import SemestersPage from "./pages/SemestersPage";
-import SubjectsPage from "./pages/SubjectsPage";
-import ResourcesPage from "./pages/ResourcesPage";
-import NotAuthorized from "./pages/NotAuthorized";
-import NotFoundPage from "./pages/NotFoundPage"; // <-- Create this component
-
-// Auth pages
-import LoginPage from "./pages/LoginPage";
-
-// CMS / Admin pages
-import Dashboard from "./cms/Dashboard";
-import UploadResource from "./cms/UploadResource";
-import ManageResource from "./cms/ManageResource";
-import ManageUsers from "./cms/ManageUsers";
-import AdminProfile from "./cms/AdminProfile";
-
-// Uploader pages
-import DashboardPage from "./pages/uploader/DashboardPage";
-
-// Route protection
 import PrivateRoute from "./routes/PrivateRoute";
-import MyUploads from "./pages/uploader/MyUploads";
-import JoinAsUploader from "./pages/JoinAsUploader";
-import JoinAsUploaderSuccess from "./pages/JoinAsUploaderSuccess";
-import AboutPage from "./pages/AboutPage";
-import ContactPage from "./pages/ContactPage";
+import Spinner from "./utils/Spinner"; // optional spinner component
 
+// Public Pages (Lazy Loaded)
+const HomePage = lazy(() => import("./pages/HomePage"));
+const ProgramsPage = lazy(() => import("./pages/ProgramsPage"));
+const SemestersPage = lazy(() => import("./pages/SemestersPage"));
+const SubjectsPage = lazy(() => import("./pages/SubjectsPage"));
+const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
+const NotAuthorized = lazy(() => import("./pages/NotAuthorized"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
 
+// Auth Pages
+const LoginPage = lazy(() => import("./pages/LoginPage"));
 
+// CMS / Admin Pages
+const Dashboard = lazy(() => import("./cms/Dashboard"));
+const UploadResource = lazy(() => import("./cms/UploadResource"));
+const ManageResource = lazy(() => import("./cms/ManageResource"));
+const ManageUsers = lazy(() => import("./cms/ManageUsers"));
+const AdminProfile = lazy(() => import("./cms/AdminProfile"));
+
+// Uploader Pages
+const DashboardPage = lazy(() => import("./pages/uploader/DashboardPage"));
+const MyUploads = lazy(() => import("./pages/uploader/MyUploads"));
+const JoinAsUploader = lazy(() => import("./pages/JoinAsUploader"));
+const JoinAsUploaderSuccess = lazy(() => import("./pages/JoinAsUploaderSuccess"));
+
+// Layouts
+const AdminLayout = ({ children }) => (
+  <div className="min-h-screen flex flex-col">
+    {/* Admin can have sidebar here if needed */}
+    {children}
+  </div>
+);
+
+const UploaderLayout = ({ children }) => (
+  <div className="min-h-screen flex flex-col">
+    {children}
+  </div>
+);
 
 function App() {
   return (
@@ -41,104 +53,91 @@ function App() {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/programs" element={<ProgramsPage />} />
-            <Route path="/program/:programName" element={<SemestersPage />} />
-            <Route
-              path="/programs/:programName/semesters/:semester/subjects"
-              element={<SubjectsPage />}
-            />
-            <Route
-              path="/programs/:programName/semesters/:semester/subjects/:subject/resources"
-              element={<ResourcesPage />}
-            />
+          <Suspense fallback={<div className="text-center py-20">Loading...</div>}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/programs" element={<ProgramsPage />} />
+              <Route path="/program/:programName" element={<SemestersPage />} />
+              <Route
+                path="/programs/:programName/semesters/:semester/subjects"
+                element={<SubjectsPage />}
+              />
+              <Route
+                path="/programs/:programName/semesters/:semester/subjects/:subject/resources"
+                element={<ResourcesPage />}
+              />
 
-            {/* Join as Uploader */}
-            <Route path="/join-as-uploader" element={<JoinAsUploader />} />
-            <Route
-              path="/join-as-uploader/success"
-              element={<JoinAsUploaderSuccess />}
-            />
+              {/* Join as Uploader */}
+              <Route path="/join-as-uploader" element={<JoinAsUploader />} />
+              <Route
+                path="/join-as-uploader/success"
+                element={<JoinAsUploaderSuccess />}
+              />
 
-  
-            {/* Private Routes */}
-            <Route path="/not-authorized" element={<NotAuthorized />} />
+              {/* Contact & About */}
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/about" element={<AboutPage />} />
 
-            {/* Auth Route */}
-            <Route path="/admin/login" element={<LoginPage />} />
+              {/* Auth Route */}
+              <Route path="/admin/login" element={<LoginPage />} />
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <PrivateRoute roles={["admin"]}>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/upload"
-              element={
-                <PrivateRoute roles={["admin", "uploader"]}>
-                  <UploadResource />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/manage"
-              element={
-                <PrivateRoute roles={["admin"]}>
-                  <ManageResource />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/manage-users"
-              element={
-                <PrivateRoute roles={["admin"]}>
-                  <ManageUsers />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute roles={["admin", "uploader"]}>
-                  <AdminProfile />
-                </PrivateRoute>
-              }
-            />
+              {/* Not Authorized */}
+              <Route path="/not-authorized" element={<NotAuthorized />} />
 
-            {/* Uploader Routes */}
-            <Route
-              path="/uploader/dashboard"
-              element={
-                <PrivateRoute roles={["admin", "uploader"]}>
-                  <DashboardPage />
-                </PrivateRoute>
-              }
-            />
+              {/* Admin Routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <PrivateRoute roles={["admin"]}>
+                    <AdminLayout>
+                      <Routes>
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="manage" element={<ManageResource />} />
+                        <Route path="manage-users" element={<ManageUsers />} />
+                        <Route path="profile" element={<AdminProfile />} />
+                        <Route path="*" element={<Navigate to="/not-authorized" />} />
+                      </Routes>
+                    </AdminLayout>
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Uploader Routes */}
-            <Route
-              path="/my-uploads"
-              element={
-                <PrivateRoute roles={["admin", "uploader"]}>
-                  <MyUploads />
-                </PrivateRoute>
-              }
-            />
+              {/* CMS Routes */}
+              <Route
+                path="/cms/*"
+                element={
+                  <PrivateRoute roles={["admin", "uploader"]}>
+                    <AdminLayout>
+                      <Routes>
+                        <Route path="upload" element={<UploadResource />} />
+                        <Route path="*" element={<Navigate to="/not-authorized" />} />
+                      </Routes>
+                    </AdminLayout>
+                  </PrivateRoute>
+                }
+              />
 
-            <Route path="/contact" element={<ContactPage />} />
+              {/* Uploader Routes */}
+              <Route
+                path="/uploader/*"
+                element={
+                  <PrivateRoute roles={["admin", "uploader"]}>
+                    <UploaderLayout>
+                      <Routes>
+                        <Route path="dashboard" element={<DashboardPage />} />
+                        <Route path="my-uploads" element={<MyUploads />} />
+                        <Route path="*" element={<Navigate to="/not-authorized" />} />
+                      </Routes>
+                    </UploaderLayout>
+                  </PrivateRoute>
+                }
+              />
 
-            <Route path="/about" element={<AboutPage />} />
-
-            {/* 404 Page */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-    
+              {/* Catch-all 404 */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
         </main>
         <Footer />
       </div>

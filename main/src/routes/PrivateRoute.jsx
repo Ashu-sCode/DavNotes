@@ -8,45 +8,63 @@ import Spinner from "../utils/Spinner";
 
 export default function PrivateRoute({ children, roles = [] }) {
   const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    let isMounted = true; // to prevent memory leaks
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        navigate("/not-authorized", { replace: true });
-        setLoading(false);
+        if (isMounted) {
+          setAuthorized(false);
+          setLoading(false);
+          navigate("/not-authorized", { replace: true });
+        }
         return;
       }
 
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (!userDoc.exists()) {
-          navigate("/not-authorized", { replace: true });
-          setLoading(false);
+          if (isMounted) {
+            setAuthorized(false);
+            setLoading(false);
+            navigate("/not-authorized", { replace: true });
+          }
           return;
         }
 
         const { role: userRole } = userDoc.data();
-        if (roles.length > 0 && !roles.includes(userRole)) {
-          navigate("/not-authorized", { replace: true });
-          setLoading(false);
-          return;
+        if (roles.length === 0 || roles.includes(userRole)) {
+          if (isMounted) {
+            setAuthorized(true);
+            setLoading(false);
+          }
+        } else {
+          if (isMounted) {
+            setAuthorized(false);
+            setLoading(false);
+            navigate("/not-authorized", { replace: true });
+          }
         }
-
-        // Everything okay → render children
-        setLoading(false);
       } catch (err) {
         console.error("Error checking user role:", err);
-        navigate("/not-authorized", { replace: true });
-        setLoading(false);
+        if (isMounted) {
+          setAuthorized(false);
+          setLoading(false);
+          navigate("/not-authorized", { replace: true });
+        }
       }
     });
 
-    return unsub;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [navigate, roles]);
 
   if (loading) {
-    // Full-page spinner prevents flicker of protected page
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-50">
         <Spinner size={60} />
@@ -54,5 +72,5 @@ export default function PrivateRoute({ children, roles = [] }) {
     );
   }
 
-  return children;
+  return authorized ? children : null;
 }

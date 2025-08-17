@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 export default function FloatingUploadButton() {
   return (
     <Link
-      to="/upload"
+      to="/cms/upload"
       aria-label="Upload New Resource"
       className="
         fixed bottom-6 right-6

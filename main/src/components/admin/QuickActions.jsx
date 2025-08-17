@@ -9,7 +9,7 @@ const defaultActions = [
     label: "Upload Resource",
     icon: <PlusCircle size={22} />,
     color: "bg-indigo-600 hover:bg-indigo-700 focus-visible:ring-indigo-400",
-    onClick: (navigate) => navigate("/upload"),
+    onClick: (navigate) => navigate("/cms/upload"),
   },
   {
     label: "Manage Resources",
