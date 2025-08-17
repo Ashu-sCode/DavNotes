@@ -15,6 +15,9 @@ export default function ResourcesPage() {
   const [filterType, setFilterType] = useState("all");
   const navigate = useNavigate();
 
+  const cacheKey = `resources_${programName}_${semester}_${subject}`;
+  const cacheExpiry = 24 * 60 * 60 * 1000; // 24h in milliseconds
+
   const categories = [
     { key: "all", label: "All" },
     { key: "notes", label: "Notes" },
@@ -27,6 +30,22 @@ export default function ResourcesPage() {
     const fetchResources = async () => {
       setLoading(true);
       setError(null);
+
+      // Check localStorage cache first
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const now = new Date().getTime();
+        if (now - parsed.timestamp < cacheExpiry) {
+          setResources(parsed.data);
+          setLoading(false);
+          return;
+        } else {
+          // Remove expired cache
+          localStorage.removeItem(cacheKey);
+        }
+      }
+
       try {
         const q = query(
           collection(db, "resources"),
@@ -38,6 +57,12 @@ export default function ResourcesPage() {
         const fetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
         setResources(fetched);
+
+        // Cache with timestamp
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ data: fetched, timestamp: new Date().getTime() })
+        );
       } catch (err) {
         console.error("Error fetching resources:", err);
         setError("Failed to load resources. Please try again.");
@@ -47,7 +72,7 @@ export default function ResourcesPage() {
     };
 
     fetchResources();
-  }, [programName, semester, subject]);
+  }, [programName, semester, subject, cacheKey]);
 
   const handleDownload = (id, url) => {
     try {
