@@ -1,11 +1,18 @@
 // src/components/SemesterCard.jsx
-import React from "react";
+import React, { memo } from "react";
+import PropTypes from "prop-types";
+import DOMPurify from "dompurify";
 
-const SemesterCard = ({ semester, icon, onClick }) => {
+const SemesterCard = memo(({ semester, icon, onClick }) => {
+  // Sanitize input
+  const safeSemester = DOMPurify.sanitize(String(semester));
+
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group p-6 rounded-xl bg-white dark:bg-gray-900 shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 w-full text-left border border-gray-200 dark:border-gray-700"
+      className="group p-6 rounded-xl bg-white dark:bg-gray-900 shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 w-full text-left border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      aria-label={`Open Semester ${safeSemester} subjects`}
     >
       <div className="flex items-center gap-4">
         <div className="flex items-center justify-center w-14 h-14 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-lg font-bold shadow-md">
@@ -13,7 +20,7 @@ const SemesterCard = ({ semester, icon, onClick }) => {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Semester {semester}
+            Semester {safeSemester}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             View all subjects
@@ -22,6 +29,18 @@ const SemesterCard = ({ semester, icon, onClick }) => {
       </div>
     </button>
   );
+});
+
+SemesterCard.displayName = "SemesterCard";
+
+SemesterCard.propTypes = {
+  semester: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  icon: PropTypes.node,
+  onClick: PropTypes.func.isRequired,
+};
+
+SemesterCard.defaultProps = {
+  icon: null,
 };
 
 export default SemesterCard;

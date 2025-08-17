@@ -1,11 +1,15 @@
 // src/pages/SemestersPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import { GraduationCap, FolderOpen } from "lucide-react";
 import SemesterCard from "../components/cards/SemesterCard";
 import { motion, AnimatePresence } from "framer-motion";
+import DOMPurify from "dompurify";
+import toast from "react-hot-toast";
+
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
 export default function SemestersPage() {
   const { programName } = useParams();
@@ -14,19 +18,38 @@ export default function SemestersPage() {
   const [loading, setLoading] = useState(true);
   const [semesters, setSemesters] = useState([]);
 
+  const safeProgramName = useMemo(
+    () => DOMPurify.sanitize(programName || ""),
+    [programName]
+  );
+
   useEffect(() => {
     const fetchSemesters = async () => {
+      setLoading(true);
+      const cacheKey = `semesters-${safeProgramName}`;
       try {
+        const cachedRaw = localStorage.getItem(cacheKey);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw);
+          const now = Date.now();
+          if (cached.timestamp && now - cached.timestamp < CACHE_DURATION) {
+            setSemesters(cached.data);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fetch fresh data
         const q = query(
           collection(db, "resources"),
-          where("program", "==", programName)
+          where("program", "==", safeProgramName)
         );
         const snapshot = await getDocs(q);
 
         const semesterSet = new Set();
         snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.semester) semesterSet.add(data.semester);
+          const sem = DOMPurify.sanitize(doc.data()?.semester || "");
+          if (sem) semesterSet.add(sem);
         });
 
         const semesterList = Array.from(semesterSet).sort(
@@ -34,18 +57,28 @@ export default function SemestersPage() {
         );
 
         setSemesters(semesterList);
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ data: semesterList, timestamp: Date.now() })
+        );
       } catch (error) {
         console.error("Error fetching semesters:", error);
+        toast.error("Failed to load semesters. Try again later.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchSemesters();
-  }, [programName]);
+  }, [safeProgramName]);
 
   const openSemester = (semester) => {
-    navigate(`/programs/${programName}/semesters/${semester}/subjects`);
+    const safeSemester = DOMPurify.sanitize(String(semester));
+    navigate(
+      `/programs/${encodeURIComponent(
+        safeProgramName
+      )}/semesters/${encodeURIComponent(safeSemester)}/subjects`
+    );
   };
 
   // Framer Motion variants
@@ -65,13 +98,15 @@ export default function SemestersPage() {
       {/* Header Section */}
       <div className="relative h-48 rounded-xl overflow-hidden mb-8">
         <img
-          src={`/images/${programName.toLowerCase().replace(/\s+/g, "-")}.jpg`}
-          alt={programName}
+          src={`/images/${safeProgramName
+            .toLowerCase()
+            .replace(/\s+/g, "-")}.jpg`}
+          alt={safeProgramName}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/40 flex flex-col justify-center px-6">
           <h1 className="text-3xl md:text-4xl font-bold text-white">
-            {programName} - Semesters
+            {safeProgramName} - Semesters
           </h1>
           <p className="text-gray-200 mt-2">
             Choose a semester to explore subjects and resources.
@@ -97,7 +132,7 @@ export default function SemestersPage() {
           </h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
             It looks like there are no semesters available for{" "}
-            <span className="font-medium">{programName}</span>. Please check
+            <span className="font-medium">{safeProgramName}</span>. Please check
             back later or contact the admin for updates.
           </p>
         </div>
