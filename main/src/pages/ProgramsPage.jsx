@@ -9,14 +9,33 @@ import ProgramCard from "../components/cards/ProgramCard";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 
+const CACHE_KEY = "programs_cache_v1";
+const CACHE_TTL = 1000 * 60 * 10; // 10 minutes
+
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
+  // ---- Load from cache on mount ----
   useEffect(() => {
-    setLoading(true);
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          setPrograms(data);
+          setLoading(false); // show cached immediately
+        }
+      } catch (err) {
+        console.warn("Failed to parse cached programs", err);
+      }
+    }
+  }, []);
+
+  // ---- Firestore subscription ----
+  useEffect(() => {
     const unsub = onSnapshot(
       collection(db, "resources"),
       (snapshot) => {
@@ -25,7 +44,6 @@ const ProgramsPage = () => {
           const rawProgram = (doc.data()?.program || "").trim();
           if (!rawProgram) return;
 
-          // sanitize program name
           const program = DOMPurify.sanitize(rawProgram);
           if (!program) return;
 
@@ -38,6 +56,12 @@ const ProgramsPage = () => {
 
         setPrograms(sortedPrograms);
         setLoading(false);
+
+        // update cache
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ data: sortedPrograms, timestamp: Date.now() })
+        );
       },
       (err) => {
         console.error("Error fetching programs:", err);
@@ -53,10 +77,8 @@ const ProgramsPage = () => {
     navigate(`/program/${encodeURIComponent(programName)}`);
   };
 
-  // sanitize search input
   const sanitizedSearch = useMemo(() => DOMPurify.sanitize(search), [search]);
 
-  // debounced filtered programs for performance
   const filteredPrograms = useMemo(
     () =>
       programs.filter((p) =>
@@ -92,10 +114,7 @@ const ProgramsPage = () => {
 
       {/* Loading state */}
       {loading ? (
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
-          aria-live="polite"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -104,10 +123,7 @@ const ProgramsPage = () => {
           ))}
         </div>
       ) : filteredPrograms.length === 0 ? (
-        <div
-          className="flex flex-col items-center justify-center text-center py-20"
-          aria-live="polite"
-        >
+        <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-6">
             <GraduationCap className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
           </div>
