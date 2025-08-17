@@ -6,7 +6,7 @@ const FloatingDownloadButton = ({ onClick, count }) => {
     <button
       onClick={onClick}
       aria-label={`Download Selected (${count})`}
-      className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition"
+      className="relative flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
       title={`Download Selected (${count})`}
       disabled={count === 0}
     >
