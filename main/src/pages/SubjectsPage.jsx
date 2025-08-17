@@ -1,12 +1,11 @@
-// src/pages/SubjectsPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
 import SubjectCard from "../components/cards/SubjectCard";
 import { Search, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import DOMPurify from "dompurify"; // For XSS sanitization
+import DOMPurify from "dompurify";
 
 export default function SubjectsPage() {
   const { programName, semester } = useParams();
@@ -16,10 +15,21 @@ export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState("");
 
-  // Fetch subjects
+  const cacheKey = `subjects_${programName}_${semester}`;
+
+  // Fetch subjects with caching
   useEffect(() => {
     const fetchSubjects = async () => {
       setLoading(true);
+
+      // Check localStorage cache first
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        setSubjects(JSON.parse(cached));
+        setLoading(false);
+        return;
+      }
+
       try {
         const q = query(
           collection(db, "resources"),
@@ -34,7 +44,11 @@ export default function SubjectsPage() {
           if (data.subject) subjectSet.add(data.subject.trim());
         });
 
-        setSubjects(Array.from(subjectSet).sort());
+        const subjectList = Array.from(subjectSet).sort();
+        setSubjects(subjectList);
+
+        // Cache in localStorage
+        localStorage.setItem(cacheKey, JSON.stringify(subjectList));
       } catch (error) {
         console.error("Error fetching subjects:", error);
         alert("Failed to load subjects. Please refresh or try later.");
@@ -44,7 +58,7 @@ export default function SubjectsPage() {
     };
 
     fetchSubjects();
-  }, [programName, semester]);
+  }, [programName, semester, cacheKey]);
 
   const openSubject = (subject) => {
     const sanitizedSubject = encodeURIComponent(subject);
@@ -55,10 +69,16 @@ export default function SubjectsPage() {
     );
   };
 
-  // Filter subjects and sanitize search input
-  const sanitizedSearch = DOMPurify.sanitize(search);
-  const filteredSubjects = subjects.filter((sub) =>
-    sub.toLowerCase().includes(sanitizedSearch.toLowerCase())
+  // Sanitize search input
+  const sanitizedSearch = useMemo(() => DOMPurify.sanitize(search), [search]);
+
+  // Filter subjects based on search
+  const filteredSubjects = useMemo(
+    () =>
+      subjects.filter((sub) =>
+        sub.toLowerCase().includes(sanitizedSearch.toLowerCase())
+      ),
+    [subjects, sanitizedSearch]
   );
 
   // Framer Motion variants
