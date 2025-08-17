@@ -1,5 +1,5 @@
-import { BookOpen } from "lucide-react";
-import { useEffect, useState } from "react";
+import { BookOpen, RefreshCcw } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../api/firebase";
@@ -11,6 +11,7 @@ export default function ResourcesPage() {
   const { programName, semester, subject } = useParams();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const navigate = useNavigate();
 
@@ -25,6 +26,7 @@ export default function ResourcesPage() {
   useEffect(() => {
     const fetchResources = async () => {
       setLoading(true);
+      setError(null);
       try {
         const q = query(
           collection(db, "resources"),
@@ -34,10 +36,11 @@ export default function ResourcesPage() {
         );
         const snap = await getDocs(q);
         const fetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
         setResources(fetched);
       } catch (err) {
         console.error("Error fetching resources:", err);
-        alert("Failed to load resources. Please try again later.");
+        setError("Failed to load resources. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -47,18 +50,30 @@ export default function ResourcesPage() {
   }, [programName, semester, subject]);
 
   const handleDownload = (id, url) => {
-    window.open(url, "_blank");
+    try {
+      const safeUrl = DOMPurify.sanitize(url);
+      if (safeUrl && safeUrl.startsWith("http")) {
+        window.open(safeUrl, "_blank", "noopener,noreferrer");
+      } else {
+        alert("Invalid file URL.");
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("Unable to download file.");
+    }
   };
 
   const sanitizedFilterType = DOMPurify.sanitize(filterType);
 
-  const filteredResources =
-    sanitizedFilterType === "all"
+  const filteredResources = useMemo(() => {
+    return sanitizedFilterType === "all"
       ? resources
       : resources.filter((r) => r.category === sanitizedFilterType);
+  }, [resources, sanitizedFilterType]);
 
   const categoryLabel =
-    categories.find((cat) => cat.key === sanitizedFilterType)?.label || "resources";
+    categories.find((cat) => cat.key === sanitizedFilterType)?.label ||
+    "resources";
 
   // Framer Motion variants
   const containerVariants = {
@@ -91,6 +106,7 @@ export default function ResourcesPage() {
                   : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
               aria-pressed={isActive}
+              aria-label={`Filter by ${cat.label}`}
             >
               {cat.label}
             </button>
@@ -98,14 +114,41 @@ export default function ResourcesPage() {
         })}
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Loading State */}
+      {loading && (
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          role="status"
+        >
           {Array.from({ length: 6 }).map((_, i) => (
             <ResourceCard key={i} skeleton />
           ))}
         </div>
-      ) : filteredResources.length === 0 ? (
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="flex flex-col items-center justify-center text-center py-20">
+          <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-6">
+            <RefreshCcw className="w-10 h-10 text-red-600 dark:text-red-300" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            Something went wrong
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6">
+            {error}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* No Data */}
+      {!loading && !error && filteredResources.length === 0 && (
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-6">
             <BookOpen className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
@@ -125,13 +168,16 @@ export default function ResourcesPage() {
             Go Back
           </button>
         </div>
-      ) : (
+      )}
+
+      {/* Resource Grid */}
+      {!loading && !error && filteredResources.length > 0 && (
         <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          key={sanitizedFilterType} // triggers re-animation on filter change
+          key={sanitizedFilterType}
         >
           <AnimatePresence>
             {filteredResources.map((res) => (

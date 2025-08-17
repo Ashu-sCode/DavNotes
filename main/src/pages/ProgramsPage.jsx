@@ -1,3 +1,4 @@
+// src/pages/ProgramsPage.jsx
 import { GraduationCap } from "lucide-react";
 import React, { useEffect, useState, useMemo } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
@@ -5,7 +6,8 @@ import { db } from "../api/firebase";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ProgramCard from "../components/cards/ProgramCard";
-import DOMPurify from "dompurify"; // sanitize input to prevent XSS
+import DOMPurify from "dompurify";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
@@ -20,8 +22,13 @@ const ProgramsPage = () => {
       (snapshot) => {
         const programCounts = {};
         snapshot.forEach((doc) => {
-          const program = (doc.data().program || "").trim();
+          const rawProgram = (doc.data()?.program || "").trim();
+          if (!rawProgram) return;
+
+          // sanitize program name
+          const program = DOMPurify.sanitize(rawProgram);
           if (!program) return;
+
           programCounts[program] = (programCounts[program] || 0) + 1;
         });
 
@@ -75,14 +82,20 @@ const ProgramsPage = () => {
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-80 md:w-96 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+          className="w-full sm:w-80 md:w-96 px-4 py-2 rounded-lg border 
+                     border-gray-300 dark:border-gray-700 
+                     dark:bg-gray-800 dark:text-white 
+                     focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
           aria-label="Search courses"
         />
       </div>
 
       {/* Loading state */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+          aria-live="polite"
+        >
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -91,7 +104,10 @@ const ProgramsPage = () => {
           ))}
         </div>
       ) : filteredPrograms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center py-20">
+        <div
+          className="flex flex-col items-center justify-center text-center py-20"
+          aria-live="polite"
+        >
           <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-6">
             <GraduationCap className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
           </div>
@@ -109,16 +125,29 @@ const ProgramsPage = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredPrograms.map((p) => (
-            <ProgramCard
-              key={p.name}
-              name={p.name}
-              count={p.count}
-              onClick={() => openProgram(p.name)}
-            />
-          ))}
-        </div>
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            {filteredPrograms.map((p) => (
+              <motion.div
+                key={p.name}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ProgramCard
+                  name={p.name}
+                  count={p.count}
+                  onClick={() => openProgram(p.name)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );

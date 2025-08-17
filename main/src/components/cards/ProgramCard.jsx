@@ -1,23 +1,42 @@
-import React from "react";
+// src/components/common/ProgramCard.jsx
+import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { programData } from "../../data/data";
+import DOMPurify from "dompurify";
+import { programData } from "../../data/Data";
+import { GraduationCap } from "lucide-react";
 
-const ProgramCard = ({ name, count = 0, onClick }) => {
-  const { icon: Icon, image, color } = programData[name] || {};
+const ProgramCard = memo(({ name, count = 0, onClick }) => {
+  const program = programData[name] || {};
+  const { icon: Icon = GraduationCap, image, color } = program;
+
+  // Sanitize + validate image (allow relative paths or http/https)
+  const safeImage =
+    typeof image === "string" &&
+    (image.startsWith("/") || image.startsWith("http"))
+      ? DOMPurify.sanitize(image)
+      : "/images/default.jpg";
 
   return (
     <motion.button
+      type="button"
       onClick={onClick}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className="relative group rounded-xl overflow-hidden shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      className="relative group rounded-xl overflow-hidden shadow-lg 
+                 transition-all duration-300 focus:outline-none 
+                 focus:ring-2 focus:ring-indigo-500 w-full"
       aria-label={`Open ${name} program with ${count} resource${count !== 1 ? "s" : ""}`}
     >
       {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${image || "/images/default.jpg"})` }}
-      />
+      <div className="absolute inset-0">
+        <img
+          src={safeImage}
+          alt={`${name} program background`}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
 
       {/* Gradient overlay */}
       <div
@@ -30,20 +49,33 @@ const ProgramCard = ({ name, count = 0, onClick }) => {
       <div className="relative p-6 flex flex-col justify-end h-48">
         {/* Icon Badge */}
         {Icon && (
-          <div className="absolute -top-2 left-5 bg-white dark:bg-gray-900 p-3 rounded-xl shadow-lg">
-            <Icon className="w-6 h-6 text-gray-900 dark:text-white" />
+          <div
+            className="absolute -top-2 left-5 bg-white dark:bg-gray-900 
+                       p-3 rounded-xl shadow-lg flex items-center justify-center"
+          >
+            <Icon
+              className="w-6 h-6 text-gray-900 dark:text-white"
+              aria-hidden="true"
+            />
           </div>
         )}
-        <h3 className="text-lg font-bold text-white">{name}</h3>
+        <h3 className="text-lg font-bold text-white drop-shadow-sm line-clamp-1">
+          {name}
+        </h3>
         <p className="text-sm text-gray-200">
           {count} resource{count !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Hover Glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-white transition-opacity duration-300" />
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-20 
+                   bg-white transition-opacity duration-300"
+      />
     </motion.button>
   );
-};
+});
+
+ProgramCard.displayName = "ProgramCard";
 
 export default ProgramCard;
