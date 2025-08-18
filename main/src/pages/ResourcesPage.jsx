@@ -15,8 +15,8 @@ export default function ResourcesPage() {
   const [filterType, setFilterType] = useState("all");
   const navigate = useNavigate();
 
-  const cacheKey = `resources_${programName}_${semester}_${subject}`;
-  const cacheExpiry = 24 * 60 * 60 * 1000; // 24h in milliseconds
+  const CACHE_KEY = `resources_${programName}_${semester}_${subject}`;
+  const CACHE_TTL = 30 * 60 * 1000; // ✅ 30 minutes
 
   const categories = [
     { key: "all", label: "All" },
@@ -27,25 +27,24 @@ export default function ResourcesPage() {
   ];
 
   useEffect(() => {
-    const fetchResources = async () => {
-      setLoading(true);
-      setError(null);
+    let isMounted = true;
 
-      // Check localStorage cache first
-      const cached = localStorage.getItem(cacheKey);
+    const loadCached = () => {
+      const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
-        const parsed = JSON.parse(cached);
-        const now = new Date().getTime();
-        if (now - parsed.timestamp < cacheExpiry) {
-          setResources(parsed.data);
-          setLoading(false);
-          return;
-        } else {
-          // Remove expired cache
-          localStorage.removeItem(cacheKey);
+        try {
+          const { data } = JSON.parse(cached);
+          if (isMounted) {
+            setResources(data);
+            setLoading(false); // show cached instantly
+          }
+        } catch (err) {
+          console.warn("Invalid cache", err);
         }
       }
+    };
 
+    const fetchResources = async () => {
       try {
         const q = query(
           collection(db, "resources"),
@@ -56,23 +55,43 @@ export default function ResourcesPage() {
         const snap = await getDocs(q);
         const fetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        setResources(fetched);
+        if (isMounted) {
+          setResources(fetched);
+          setLoading(false);
+        }
 
-        // Cache with timestamp
+        // Cache with new timestamp
         localStorage.setItem(
-          cacheKey,
-          JSON.stringify({ data: fetched, timestamp: new Date().getTime() })
+          CACHE_KEY,
+          JSON.stringify({ data: fetched, timestamp: Date.now() })
         );
       } catch (err) {
         console.error("Error fetching resources:", err);
-        setError("Failed to load resources. Please try again.");
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          setError("Failed to load resources. Please try again.");
+          setLoading(false);
+        }
       }
     };
 
-    fetchResources();
-  }, [programName, semester, subject, cacheKey]);
+    // 1. Show cached immediately (even if expired)
+    loadCached();
+
+    // 2. Check if cache expired, otherwise fetch fresh
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > CACHE_TTL) {
+        fetchResources(); // expired → refresh
+      }
+    } else {
+      fetchResources(); // no cache → fetch
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [programName, semester, subject, CACHE_KEY]);
 
   const handleDownload = (id, url) => {
     try {

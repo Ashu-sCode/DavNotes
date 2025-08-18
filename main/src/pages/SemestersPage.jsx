@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import toast from "react-hot-toast";
 
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+const CACHE_DURATION = 1000 * 60 * 30; // 15 minutes
 
 export default function SemestersPage() {
   const { programName } = useParams();
@@ -27,19 +27,22 @@ export default function SemestersPage() {
     const fetchSemesters = async () => {
       setLoading(true);
       const cacheKey = `semesters-${safeProgramName}`;
-      try {
-        const cachedRaw = localStorage.getItem(cacheKey);
-        if (cachedRaw) {
-          const cached = JSON.parse(cachedRaw);
-          const now = Date.now();
-          if (cached.timestamp && now - cached.timestamp < CACHE_DURATION) {
-            setSemesters(cached.data);
-            setLoading(false);
-            return;
-          }
-        }
+      const now = Date.now();
 
-        // Fetch fresh data
+      // --- Serve cached data if valid ---
+      let cachedData = null;
+      const cachedRaw = localStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw);
+        if (cached.timestamp && now - cached.timestamp < CACHE_DURATION) {
+          cachedData = cached.data;
+          setSemesters(cached.data);
+          setLoading(false);
+        }
+      }
+
+      try {
+        // --- Always fetch fresh in background ---
         const q = query(
           collection(db, "resources"),
           where("program", "==", safeProgramName)
@@ -56,11 +59,17 @@ export default function SemestersPage() {
           (a, b) => Number(a) - Number(b)
         );
 
-        setSemesters(semesterList);
-        localStorage.setItem(
-          cacheKey,
-          JSON.stringify({ data: semesterList, timestamp: Date.now() })
-        );
+        // --- Update if cache expired OR data changed ---
+        if (
+          !cachedData ||
+          JSON.stringify(semesterList) !== JSON.stringify(cachedData)
+        ) {
+          setSemesters(semesterList);
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ data: semesterList, timestamp: now })
+          );
+        }
       } catch (error) {
         console.error("Error fetching semesters:", error);
         toast.error("Failed to load semesters. Try again later.");

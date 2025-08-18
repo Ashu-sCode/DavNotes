@@ -10,7 +10,8 @@ import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CACHE_KEY = "programs_cache_v1";
-const CACHE_TTL = 1000 * 60 * 10; // 10 minutes
+const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
