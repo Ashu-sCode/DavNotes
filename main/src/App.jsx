@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./routes/PrivateRoute";
 import Spinner from "./utils/Spinner"; // optional spinner component
+import PageTracking from "./components/PageTracking";
 
 // Public Pages (Lazy Loaded)
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -58,6 +59,7 @@ function App() {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow">
+          <PageTracking/>
           <Suspense
             fallback={
               <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -82,6 +84,7 @@ function App() {
                 element={<ResourcesPage />}
               />
 
+            
               {/* Join as Uploader */}
               <Route path="/join-as-uploader" element={<JoinAsUploader />} />
               <Route

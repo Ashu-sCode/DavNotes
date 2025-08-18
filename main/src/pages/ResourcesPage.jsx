@@ -2,10 +2,11 @@ import { BookOpen, RefreshCcw } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../api/firebase";
+import { db, analytics } from "../api/firebase";
 import ResourceCard from "../components/cards/ResourceCard";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
+import { logEventUtil } from "../utils/LogEventUtil";
 
 export default function ResourcesPage() {
   const { programName, semester, subject } = useParams();
@@ -96,8 +97,18 @@ export default function ResourcesPage() {
   const handleDownload = (id, url) => {
     try {
       const safeUrl = DOMPurify.sanitize(url);
+
       if (safeUrl && safeUrl.startsWith("http")) {
-        window.open(safeUrl, "_blank", "noopener,noreferrer");
+        logEventUtil(analytics, "file_download", {
+          file_id: id,
+          file_url: safeUrl,
+          timestamp: new Date().toISOString(),
+        });
+
+        // ✅ Add small delay to ensure GA logs
+        setTimeout(() => {
+          window.open(safeUrl, "_blank", "noopener,noreferrer");
+        }, 500);
       } else {
         alert("Invalid file URL.");
       }
