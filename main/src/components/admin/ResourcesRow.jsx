@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit3, Trash2, Download } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 
@@ -12,7 +12,7 @@ const formatBytes = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 };
 
-const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) => {
+const ResourceRow = ({ resource, onDelete, isSelected, toggleSelect }) => {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadClick = (e) => {
@@ -22,7 +22,6 @@ const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) =
 
     setDownloading(true);
     try {
-      // Open file in new tab
       window.open(resource.fileUrl, "_blank");
     } catch (error) {
       console.error("Error downloading file:", error);
@@ -46,8 +45,8 @@ const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) =
       tabIndex={0}
       aria-selected={isSelected}
     >
-      {/* Selection Checkbox */}
-      <td className="p-3">
+      {/* Desktop Table */}
+      <td className="p-3 hidden sm:table-cell">
         <input
           type="checkbox"
           checked={isSelected}
@@ -56,36 +55,24 @@ const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) =
           className="cursor-pointer"
         />
       </td>
-
-      <td className="p-3 truncate max-w-[150px]" title={resource.title}>
+      <td className="p-3 hidden sm:table-cell truncate max-w-[150px]" title={resource.title}>
         {resource.title}
       </td>
-      <td className="p-3 truncate max-w-[120px]" title={resource.category}>
+      <td className="p-3 hidden sm:table-cell truncate max-w-[120px]" title={resource.category}>
         {resource.category}
       </td>
-      <td className="p-3 truncate max-w-[120px]" title={resource.program}>
+      <td className="p-3 hidden sm:table-cell truncate max-w-[120px]" title={resource.program}>
         {resource.program}
       </td>
-      <td className="p-3">{resource.year}</td>
-      <td className="p-3 truncate max-w-[120px]" title={resource.subject}>
+      <td className="p-3 hidden md:table-cell">{resource.year}</td>
+      <td className="p-3 hidden md:table-cell truncate max-w-[120px]" title={resource.subject}>
         {resource.subject}
       </td>
-      <td className="p-3">{formatBytes(resource.fileSize)}</td>
-      <td className="p-3">
-        {resource.createdAt
-          ? resource.createdAt.toDate().toLocaleDateString()
-          : "-"}
+      <td className="p-3 hidden lg:table-cell">{formatBytes(resource.fileSize)}</td>
+      <td className="p-3 hidden lg:table-cell">
+        {resource.createdAt ? resource.createdAt.toDate().toLocaleDateString() : "-"}
       </td>
-
-      {/* Actions */}
-      <td className="p-3 flex gap-2 justify-end">
-        <button
-          className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-          onClick={() => onEdit(resource)}
-          aria-label={`Edit ${resource.title || "resource"}`}
-        >
-          <Edit3 size={16} />
-        </button>
+      <td className="p-3 hidden sm:table-cell gap-2 justify-end flex">
         <button
           className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
           onClick={() => onDelete(resource)}
@@ -97,9 +84,7 @@ const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) =
           onClick={handleDownloadClick}
           disabled={downloading}
           className={`p-2 rounded text-white transition ${
-            downloading
-              ? "bg-green-600/50 cursor-wait"
-              : "bg-green-600 hover:bg-green-700"
+            downloading ? "bg-green-600/50 cursor-wait" : "bg-green-600 hover:bg-green-700"
           }`}
           aria-label={`Download ${resource.title || "resource"}`}
           title={`Download ${resource.title || "resource"}`}
@@ -111,24 +96,72 @@ const ResourceRow = ({ resource, onEdit, onDelete, isSelected, toggleSelect }) =
               fill="none"
               viewBox="0 0 24 24"
             >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              ></path>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
           ) : (
             <Download size={16} />
           )}
         </button>
+      </td>
+
+      {/* Mobile Card */}
+      <td className="p-3 sm:hidden">
+        <div className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-800 rounded p-3 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={toggleSelect}
+                aria-label={`Select resource ${resource.title}`}
+                className="cursor-pointer"
+              />
+              <span className="font-medium">{resource.title}</span>
+            </div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {resource.createdAt ? resource.createdAt.toDate().toLocaleDateString() : "-"}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-300">
+            {resource.category && <span>📁 {resource.category}</span>}
+            {resource.program && <span>🎓 {resource.program}</span>}
+            {resource.year && <span>📅 {resource.year}</span>}
+            {resource.subject && <span>📚 {resource.subject}</span>}
+            {resource.fileSize && <span>💾 {formatBytes(resource.fileSize)}</span>}
+          </div>
+
+          <div className="flex gap-2 mt-2">
+            <button
+              className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition flex-1"
+              onClick={() => onDelete(resource)}
+            >
+              <Trash2 size={16} />
+            </button>
+            <button
+              onClick={handleDownloadClick}
+              disabled={downloading}
+              className={`p-2 rounded text-white transition flex-1 ${
+                downloading ? "bg-green-600/50 cursor-wait" : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {downloading ? (
+                <svg
+                  className="animate-spin h-5 w-5 mx-auto"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+              ) : (
+                <Download size={16} />
+              )}
+            </button>
+          </div>
+        </div>
       </td>
     </motion.tr>
   );

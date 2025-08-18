@@ -16,21 +16,27 @@ export default function SubjectsPage() {
   const [search, setSearch] = useState("");
 
   const cacheKey = `subjects_${programName}_${semester}`;
+  const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes in ms
 
-  // Fetch subjects with caching
   useEffect(() => {
     const fetchSubjects = async () => {
       setLoading(true);
+      const now = Date.now();
 
-      // Check localStorage cache first
+      // Load cached if not expired
       const cached = localStorage.getItem(cacheKey);
+      let cachedData = null;
       if (cached) {
-        setSubjects(JSON.parse(cached));
-        setLoading(false);
-        return;
+        const parsed = JSON.parse(cached);
+        if (now - parsed.timestamp < CACHE_EXPIRY) {
+          cachedData = parsed.data;
+          setSubjects(parsed.data);
+          setLoading(false);
+        }
       }
 
       try {
+        // Always fetch fresh in background
         const q = query(
           collection(db, "resources"),
           where("program", "==", programName),
@@ -45,10 +51,18 @@ export default function SubjectsPage() {
         });
 
         const subjectList = Array.from(subjectSet).sort();
-        setSubjects(subjectList);
 
-        // Cache in localStorage
-        localStorage.setItem(cacheKey, JSON.stringify(subjectList));
+        // Update if no cache, cache expired, or new data found
+        if (
+          !cachedData ||
+          JSON.stringify(subjectList) !== JSON.stringify(cachedData)
+        ) {
+          setSubjects(subjectList);
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ data: subjectList, timestamp: now })
+          );
+        }
       } catch (error) {
         console.error("Error fetching subjects:", error);
         alert("Failed to load subjects. Please refresh or try later.");
@@ -69,10 +83,8 @@ export default function SubjectsPage() {
     );
   };
 
-  // Sanitize search input
   const sanitizedSearch = useMemo(() => DOMPurify.sanitize(search), [search]);
 
-  // Filter subjects based on search
   const filteredSubjects = useMemo(
     () =>
       subjects.filter((sub) =>
@@ -81,7 +93,6 @@ export default function SubjectsPage() {
     [subjects, sanitizedSearch]
   );
 
-  // Framer Motion variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -97,7 +108,8 @@ export default function SubjectsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 dark:text-gray-50">
-          {DOMPurify.sanitize(programName)} - Semester {DOMPurify.sanitize(semester)}
+          {DOMPurify.sanitize(programName)} - Semester{" "}
+          {DOMPurify.sanitize(semester)}
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           Choose a subject to explore resources.
@@ -139,7 +151,8 @@ export default function SubjectsPage() {
           <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
             No subjects listed for{" "}
             <span className="font-medium">
-              {DOMPurify.sanitize(programName)} - Semester {DOMPurify.sanitize(semester)}
+              {DOMPurify.sanitize(programName)} - Semester{" "}
+              {DOMPurify.sanitize(semester)}
             </span>
             . Try adjusting your search or check back later.
           </p>
@@ -150,7 +163,7 @@ export default function SubjectsPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          key={sanitizedSearch} // re-animates when search changes
+          key={sanitizedSearch}
         >
           <AnimatePresence>
             {filteredSubjects.map((sub) => (

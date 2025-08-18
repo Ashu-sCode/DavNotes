@@ -1,5 +1,10 @@
 // App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -31,7 +36,9 @@ const AdminProfile = lazy(() => import("./cms/AdminProfile"));
 const DashboardPage = lazy(() => import("./pages/uploader/DashboardPage"));
 const MyUploads = lazy(() => import("./pages/uploader/MyUploads"));
 const JoinAsUploader = lazy(() => import("./pages/JoinAsUploader"));
-const JoinAsUploaderSuccess = lazy(() => import("./pages/JoinAsUploaderSuccess"));
+const JoinAsUploaderSuccess = lazy(() =>
+  import("./pages/JoinAsUploaderSuccess")
+);
 
 // Layouts
 const AdminLayout = ({ children }) => (
@@ -42,9 +49,7 @@ const AdminLayout = ({ children }) => (
 );
 
 const UploaderLayout = ({ children }) => (
-  <div className="min-h-screen flex flex-col">
-    {children}
-  </div>
+  <div className="min-h-screen flex flex-col">{children}</div>
 );
 
 function App() {
@@ -53,7 +58,16 @@ function App() {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow">
-          <Suspense fallback={<div className="text-center py-20">Loading...</div>}>
+          <Suspense
+            fallback={
+              <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+                <Spinner size={60} />
+                <p className="mt-4 text-gray-700 dark:text-gray-300 text-lg animate-pulse">
+                  Loading, please wait...
+                </p>
+              </div>
+            }
+          >
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
@@ -95,14 +109,40 @@ function App() {
                         <Route path="dashboard" element={<Dashboard />} />
                         <Route path="manage" element={<ManageResource />} />
                         <Route path="manage-users" element={<ManageUsers />} />
-                        <Route path="profile" element={<AdminProfile />} />
-                        <Route path="*" element={<Navigate to="/not-authorized" />} />
+                        
+                        <Route
+                          path="*"
+                          element={<Navigate to="/not-authorized" />}
+                        />
                       </Routes>
                     </AdminLayout>
                   </PrivateRoute>
                 }
               />
 
+              {/* Admin Profile */}
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute roles={["admin" , "uploader"]}>
+                    <AdminLayout>
+                      <AdminProfile />
+                    </AdminLayout>
+                  </PrivateRoute>
+                }
+              />
+                  <Route
+                path="/my-uploads"
+                element={
+                  <PrivateRoute roles={["admin" , "uploader"]}>
+                    <AdminLayout>
+                      <MyUploads />
+                    </AdminLayout>
+                  </PrivateRoute>
+                }
+              />
+
+             
               {/* CMS Routes */}
               <Route
                 path="/cms/*"
@@ -111,7 +151,10 @@ function App() {
                     <AdminLayout>
                       <Routes>
                         <Route path="upload" element={<UploadResource />} />
-                        <Route path="*" element={<Navigate to="/not-authorized" />} />
+                        <Route
+                          path="*"
+                          element={<Navigate to="/not-authorized" />}
+                        />
                       </Routes>
                     </AdminLayout>
                   </PrivateRoute>
@@ -126,8 +169,11 @@ function App() {
                     <UploaderLayout>
                       <Routes>
                         <Route path="dashboard" element={<DashboardPage />} />
-                        <Route path="my-uploads" element={<MyUploads />} />
-                        <Route path="*" element={<Navigate to="/not-authorized" />} />
+                        
+                        <Route
+                          path="*"
+                          element={<Navigate to="/not-authorized" />}
+                        />
                       </Routes>
                     </UploaderLayout>
                   </PrivateRoute>

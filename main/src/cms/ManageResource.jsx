@@ -6,6 +6,8 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 import { toast } from "react-hot-toast";
@@ -17,9 +19,9 @@ import SearchBar from "../components/SearchBar";
 import ResourcesTable from "../components/admin/ResourcesTable";
 import FloatingUploadButton from "../components/admin/FAB/FloatingUploadButton";
 import FloatingDownloadButton from "../components/admin/FAB/FloatingDownloadButton";
+import FloatingDeleteButton from "../components/admin/FAB/FloatingDeleteButton";
 import Spinner from "../utils/Spinner";
 import { useNavigate } from "react-router-dom";
-import FloatingDeleteButton from "../components/admin/FAB/FloatingDeleteButton";
 
 const MySwal = withReactContent(Swal);
 
@@ -29,29 +31,25 @@ const ManageResources = () => {
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Filters
   const [filterCategory, setFilterCategory] = useState("");
   const [filterProgram, setFilterProgram] = useState("");
   const [filterSubject, setFilterSubject] = useState("");
 
+  const [allCategories, setAllCategories] = useState([]);
+  const [allPrograms, setAllPrograms] = useState([]);
+  const [allSubjects, setAllSubjects] = useState([]);
+
   const navigate = useNavigate();
 
-  // Fetch filtered resources
+  // Fetch resources with optional filters
   const fetchFilteredResources = () => {
     setLoading(true);
-
-    // Build Firestore query dynamically
     let q = collection(db, "resources");
-    let conditions = [];
-
-    if (filterCategory)
-      conditions.push(where("category", "==", filterCategory));
+    const conditions = [];
+    if (filterCategory) conditions.push(where("category", "==", filterCategory));
     if (filterProgram) conditions.push(where("program", "==", filterProgram));
     if (filterSubject) conditions.push(where("subject", "==", filterSubject));
-
-    if (conditions.length > 0) {
-      q = query(q, ...conditions);
-    }
+    if (conditions.length) q = query(q, ...conditions);
 
     const unsubscribe = onSnapshot(
       q,
@@ -64,7 +62,7 @@ const ManageResources = () => {
         setLoading(false);
       },
       (error) => {
-        console.error("Error fetching filtered resources:", error);
+        console.error(error);
         toast.error("Failed to load resources");
         setLoading(false);
       }
@@ -74,67 +72,47 @@ const ManageResources = () => {
   };
 
   useEffect(() => {
-    const unsubscribe = fetchFilteredResources();
-    return () => unsubscribe();
+    const unsub = fetchFilteredResources();
+    return () => unsub();
   }, [filterCategory, filterProgram, filterSubject]);
 
-  // Delete resource
-  const handleDelete = async (resource) => {
-    const result = await MySwal.fire({
-      title: "Delete Resource?",
-      text: `Are you sure you want to delete "${
-        resource.title || "this resource"
-      }"?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it!",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1f2937"
-        : "#ffffff",
-      color: document.documentElement.classList.contains("dark")
-        ? "#f9fafb"
-        : "#111827",
-    });
-
-    if (result.isConfirmed) {
-      try {
-        if (resource.storagePath) {
-          const fileRef = ref(storage, resource.storagePath);
-          await deleteObject(fileRef);
-        }
-        await deleteDoc(doc(db, "resources", resource.id));
-        toast.success("Resource deleted");
-      } catch (error) {
-        console.error("Error deleting resource:", error);
-        toast.error("Failed to delete resource");
-      }
-    }
-  };
-
-  // Edit resource
-  const handleEdit = (resource) => {
-    toast("Edit feature coming soon!");
-  };
-
-  // Unique filter lists — keep them from ALL docs, not just filtered ones
-  const [allCategories, setAllCategories] = useState([]);
-  const [allPrograms, setAllPrograms] = useState([]);
-  const [allSubjects, setAllSubjects] = useState([]);
-
-  // Fetch unique filter lists
+  // Fetch distinct filter options
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "resources"), (snapshot) => {
       const docs = snapshot.docs.map((d) => d.data());
-      setAllCategories(
-        [...new Set(docs.map((r) => r.category))].filter(Boolean)
-      );
+      setAllCategories([...new Set(docs.map((r) => r.category))].filter(Boolean));
       setAllPrograms([...new Set(docs.map((r) => r.program))].filter(Boolean));
       setAllSubjects([...new Set(docs.map((r) => r.subject))].filter(Boolean));
     });
     return () => unsub();
   }, []);
+
+  const handleDelete = async (resource) => {
+    const result = await MySwal.fire({
+      title: "Delete Resource?",
+      text: `Are you sure you want to delete "${resource.title || "this resource"}"?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+      background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+      color: document.documentElement.classList.contains("dark") ? "#f9fafb" : "#111827",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        if (resource.storagePath) await deleteObject(ref(storage, resource.storagePath));
+        await deleteDoc(doc(db, "resources", resource.id));
+        toast.success("Resource deleted");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to delete resource");
+      }
+    }
+  };
+
+  const handleEdit = (resource) => toast("Edit feature coming soon!");
 
   const filteredResources = resources.filter(
     (res) =>
@@ -145,11 +123,11 @@ const ManageResources = () => {
   );
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === resources.length) {
-      setSelectedIds([]); // deselect all
-    } else {
-      setSelectedIds(resources.map((r) => r.id)); // select all
-    }
+    setSelectedIds(
+      selectedIds.length === filteredResources.length
+        ? []
+        : filteredResources.map((r) => r.id)
+    );
   };
 
   const toggleSelect = (id) => {
@@ -158,29 +136,14 @@ const ManageResources = () => {
     );
   };
 
-  // Batch download
+  // Batch Download
   const handleBatchDownload = async () => {
-    if (selectedIds.length === 0) {
-      toast.error("No resources selected for download.");
-      return;
-    }
+    if (!selectedIds.length) return toast.error("No resources selected.");
+    const selectedResources = resources.filter((r) => selectedIds.includes(r.id));
+    if (!selectedResources.length) return toast.error("Selected resources not found.");
 
-    const selectedResources = resources.filter((r) =>
-      selectedIds.includes(r.id)
-    );
-
-    if (selectedResources.length === 0) {
-      toast.error("Selected resources not found.");
-      return;
-    }
-
-    // Trigger downloads with a slight stagger to avoid browser blocking
     selectedResources.forEach((resource, index) => {
-      if (!resource.fileUrl) {
-        toast.error(`No download link for ${resource.title || "a resource"}`);
-        return;
-      }
-
+      if (!resource.fileUrl) return toast.error(`No download link for ${resource.title}`);
       setTimeout(() => {
         const link = document.createElement("a");
         link.href = resource.fileUrl;
@@ -192,28 +155,19 @@ const ManageResources = () => {
       }, index * 300);
     });
 
-    // Update Firestore download counts in parallel (no delay)
     try {
       await Promise.all(
         selectedResources.map((resource) =>
-          updateDoc(doc(db, "resources", resource.id), {
-            downloadCount: increment(1),
-          }).catch((error) => {
-            console.error(
-              `Failed to update download count for ${resource.title}`,
-              error
-            );
-          })
+          updateDoc(doc(db, "resources", resource.id), { downloadCount: increment(1) }).catch(console.error)
         )
       );
       toast.success(`Started downloading ${selectedResources.length} files.`);
-    } catch (error) {
+    } catch {
       toast.error("Some download counts failed to update.");
     }
   };
 
-  
-  // Batch delete
+  // Batch Delete
   const handleBatchDelete = async () => {
     const result = await MySwal.fire({
       title: `Delete ${selectedIds.length} selected resources?`,
@@ -223,112 +177,90 @@ const ManageResources = () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Yes, delete them!",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1f2937"
-        : "#ffffff",
-      color: document.documentElement.classList.contains("dark")
-        ? "#f9fafb"
-        : "#111827",
+      background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+      color: document.documentElement.classList.contains("dark") ? "#f9fafb" : "#111827",
     });
 
     if (result.isConfirmed) {
       try {
-        // For each selected resource, delete from storage and firestore
         for (const id of selectedIds) {
           const resource = resources.find((r) => r.id === id);
           if (resource) {
-            if (resource.storagePath) {
-              const fileRef = ref(storage, resource.storagePath);
-              await deleteObject(fileRef);
-            }
+            if (resource.storagePath) await deleteObject(ref(storage, resource.storagePath));
             await deleteDoc(doc(db, "resources", id));
           }
         }
         toast.success(`${selectedIds.length} resources deleted`);
-        setSelectedIds([]); // clear selection after deletion
+        setSelectedIds([]);
       } catch (error) {
-        console.error("Error deleting resources:", error);
+        console.error(error);
         toast.error("Failed to delete selected resources");
       }
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-lg transition-colors duration-500">
-      <h2 className="text-2xl font-bold mb-4">📂 Manage Resources</h2>
+    <div className="max-w-full sm:max-w-6xl mx-auto p-4 sm:p-6 dark:text-white transition-colors duration-500">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-center sm:text-left">📂 Manage Resources</h2>
 
       {/* Search + Filters */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-        <div className="flex-1">
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterCategory={filterCategory}
-            setFilterCategory={setFilterCategory}
-            filterProgram={filterProgram}
-            setFilterProgram={setFilterProgram}
-            filterSubject={filterSubject}
-            setFilterSubject={setFilterSubject}
-            allCategories={allCategories}
-            allPrograms={allPrograms}
-            allSubjects={allSubjects}
-          />
-        </div>
+        <div className="relative min-h-[100px] overflow-x-auto sm:overflow-visible">
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterCategory={filterCategory}
+          setFilterCategory={setFilterCategory}
+          filterProgram={filterProgram}
+          setFilterProgram={setFilterProgram}
+          filterSubject={filterSubject}
+          setFilterSubject={setFilterSubject}
+          allCategories={allCategories}
+          allPrograms={allPrograms}
+          allSubjects={allSubjects}
+        />
       </div>
 
-      {/* Results Section */}
-      <div className="relative min-h-[200px]">
-        {/* Overlay Spinner (no flicker) */}
+      {/* Resources Table */}
+      <div className="relative min-h-[200px] overflow-x-auto sm:overflow-visible">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm z-10 transition-opacity duration-300">
             <Spinner size={48} />
           </div>
         )}
 
-        {/* Animated Content */}
-        <div>
-          {filteredResources.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-100">
-              No resources found. Try adjusting your search or{" "}
-              <button
-                onClick={() => navigate("/admin/upload")}
-                className="text-indigo-500 underline hover:text-indigo-600"
-              >
-                uploading a new one
-              </button>
-              .
-            </p>
-          ) : (
-            <div className="animate-fadeIn">
-              <ResourcesTable
-                resources={filteredResources}
-                onDelete={handleDelete}
-                selectedIds={selectedIds}
-                onEdit={handleEdit}
-                toggleSelect={toggleSelect}
-                toggleSelectAll={toggleSelectAll}
-                showDownloadCount={true}
-              />
-            </div>
-          )}
-        </div>
+        {filteredResources.length === 0 && !loading ? (
+          <p className="text-gray-500 dark:text-gray-100 text-center sm:text-left">
+            No resources found. Try adjusting your search or{" "}
+            <button
+              onClick={() => navigate("/admin/upload")}
+              className="text-indigo-500 underline hover:text-indigo-600"
+            >
+              uploading a new one
+            </button>
+            .
+          </p>
+        ) : (
+          <ResourcesTable
+            resources={filteredResources}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            selectedIds={selectedIds}
+            toggleSelect={toggleSelect}
+            toggleSelectAll={toggleSelectAll}
+            loading={loading}
+          />
+        )}
       </div>
 
       {/* Batch Actions */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-4">
-          <FloatingDownloadButton
-            count={selectedIds.length}
-            onClick={handleBatchDownload}
-          />
-          <FloatingDeleteButton
-            onClick={handleBatchDelete}
-            count={selectedIds.length}
-          />
+        <div className="fixed bottom-24 right-4 sm:right-6 z-50 flex flex-col gap-4">
+          <FloatingDownloadButton count={selectedIds.length} onClick={handleBatchDownload} />
+          <FloatingDeleteButton count={selectedIds.length} onClick={handleBatchDelete} />
         </div>
       )}
 
-      {/* Upload button with lower z-index */}
+      {/* Upload button */}
       <FloatingUploadButton />
     </div>
   );
