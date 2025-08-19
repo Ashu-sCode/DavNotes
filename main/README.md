@@ -2,7 +2,7 @@
 
 > A student-friendly platform to **download notes, previous year question papers, assignments, and syllabus** — with a robust CMS for verified uploaders and admins.  
 
-![DavNotes Screenshot](https://via.placeholder.com/1000x500.png?text=DavNotes+Demo+Screenshot)
+![DavNotes Screenshot](https://github.com/user-attachments/assets/b307f2de-d7ba-4945-b300-a418563e3c18)
 
 ---
 
