@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://davnotes.netlify.app/</loc>
+    <lastmod>2025-08-18</lastmod>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- About Page -->
+  <url>
+    <loc>https://davnotes.netlify.app/about</loc>
+    <lastmod>2025-08-18</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Resources / Notes Page -->
+  <url>
+    <loc>https://davnotes.netlify.app/programs</loc>
+    <lastmod>2025-08-18</lastmod>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Contact Page -->
+  <url>
+    <loc>https://davnotes.netlify.app/contact</loc>
+    <lastmod>2025-08-18</lastmod>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>
