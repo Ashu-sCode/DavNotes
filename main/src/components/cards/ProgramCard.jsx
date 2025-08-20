@@ -2,7 +2,7 @@
 import React, { memo, useState } from "react";
 import { motion } from "framer-motion";
 import DOMPurify from "dompurify";
-import { programData } from "../../data/Data";
+import { programData } from "../../data/ProgramData.js";
 import { GraduationCap } from "lucide-react";
 
 const ProgramCard = memo(({ name, count = 0, onClick }) => {
