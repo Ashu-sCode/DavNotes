@@ -259,9 +259,9 @@ export default function ResourcesPage() {
     <>
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
-      <Breadcrumb/>
 
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
+      <Breadcrumb/>
         <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">
           {safeSubject} Resources
         </h1>

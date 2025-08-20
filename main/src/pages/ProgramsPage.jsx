@@ -138,10 +138,11 @@ const ProgramsPage = () => {
 
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
-      <Breadcrumb />
+    
 
       {/* Page Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+          <Breadcrumb />
         {/* Header */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-green-100 mb-2">
           Courses

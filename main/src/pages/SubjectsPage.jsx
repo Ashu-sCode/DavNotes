@@ -7,6 +7,7 @@ import SubjectCard from "../components/cards/SubjectCard";
 import { Search, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
+import Breadcrumb from "../components/BreadCrumb";
 
 const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 const domain = "https://davnotes.netlify.app";
@@ -201,7 +202,9 @@ export default function SubjectsPage() {
     <>
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
+
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
+      <Breadcrumb/>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 dark:text-gray-50">

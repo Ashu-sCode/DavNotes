@@ -8,6 +8,7 @@ import SemesterCard from "../components/cards/SemesterCard";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import toast from "react-hot-toast";
+import Breadcrumb from "../components/BreadCrumb";
 
 const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
 const domain = "https://davnotes.netlify.app";
@@ -199,7 +200,9 @@ export default function SemestersPage() {
     <>
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
+
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
+      <Breadcrumb/>
         {/* Header */}
         <div className="relative h-48 rounded-xl overflow-hidden mb-8">
           <img
