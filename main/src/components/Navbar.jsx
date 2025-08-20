@@ -53,8 +53,8 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen((prev) => !prev);
 
   const navLinks = [
-    { label: "Home", to: "/" },
-    { label: "Resources", to: "/programs" },
+   
+    { label: "Resources", to: "/programs" },  { label: "About", to: "/about" },{ label: "Contact", to: "/contact" },{ label: "Home", to: "/" },
     ...(role === "admin" ? [{ label: "Admin Dashboard", to: "/admin/dashboard" }] : []),
     ...(role === "uploader" ? [{ label: "Uploader Dashboard", to: "/uploader/dashboard" }] : []),
   ];

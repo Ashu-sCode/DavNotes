@@ -52,9 +52,9 @@ export default function Footer() {
 
           <Link
             to="/admin/login"
-            className="font-medium hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className=" hover:underline hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
-            Admin Login
+            Admin/Uploaders
           </Link>
         </div>
       </div>

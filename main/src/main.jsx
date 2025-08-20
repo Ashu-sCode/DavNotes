@@ -7,14 +7,15 @@ import "./index.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "react-hot-toast";
-
+import { HelmetProvider } from "react-helmet-async";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <App />
-     
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
         <Toaster position="top-center" reverseOrder={false} />
       </AuthProvider>
     </ThemeProvider>

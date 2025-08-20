@@ -5,6 +5,7 @@ import { auth, db } from "../api/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async"; // ✅ SEO
 
 export default function LandingPage() {
   const [user, setUser] = useState(null);
@@ -25,13 +26,13 @@ export default function LandingPage() {
       try {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists()) {
-          const { role } = userDoc.data(); // ← get role directly
+          const { role } = userDoc.data();
 
           if (role === "admin") setDashboardLink("/admin/dashboard");
           else if (role === "uploader") setDashboardLink("/uploader/dashboard");
-          else setDashboardLink("/programs"); // fallback if role unknown
+          else setDashboardLink("/programs");
         } else {
-          setDashboardLink("/programs"); // fallback if no user doc
+          setDashboardLink("/programs");
         }
       } catch (err) {
         console.error("Failed to fetch user role:", err);
@@ -55,8 +56,7 @@ export default function LandingPage() {
     },
     {
       title: "📚 Assignments & Syllabus",
-      description:
-        "Get access to syllabus and assignments for quick reference.",
+      description: "Get access to syllabus and assignments for quick reference.",
     },
   ];
 
@@ -70,6 +70,35 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen mt-6 flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
+      {/* ✅ SEO Helmet */}
+      <Helmet>
+        <title>
+          DavNotes | Previous Year Papers, Notes, Assignments & Syllabus
+        </title>
+        <meta
+          name="description"
+          content="Download free BCA, BBA, and Dav College Chandigarh previous year papers, notes, assignments, and syllabus. Organized semester-wise study material in PDF."
+        />
+        <meta
+          name="keywords"
+          content="davnotes, dav college chandigarh, bca notes, bba notes, previous year question papers, pyq, syllabus, assignments, free pdf notes, semester wise study material"
+        />
+        <link rel="canonical" href="https://davnotes.vercel.app/" />
+
+        {/* OpenGraph for Social Sharing */}
+        <meta property="og:title" content="DavNotes - Free Study Material" />
+        <meta
+          property="og:description"
+          content="Access previous year question papers, notes, syllabus and assignments for BCA, BBA and more from Dav College Chandigarh."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://davnotes.vercel.app/" />
+        <meta
+          property="og:image"
+          content="https://davnotes.vercel.app/preview.png"
+        />
+      </Helmet>
+
       {/* Hero Section */}
       <section className="flex-1 flex flex-col justify-center items-center px-6 py-16">
         <motion.h1

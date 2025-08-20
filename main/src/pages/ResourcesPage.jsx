@@ -7,6 +7,7 @@ import ResourceCard from "../components/cards/ResourceCard";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import { logEventUtil } from "../utils/LogEventUtil";
+import { Helmet } from "react-helmet-async";
 
 export default function ResourcesPage() {
   const { programName, semester, subject } = useParams();
@@ -143,6 +144,35 @@ export default function ResourcesPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
+      <Helmet>
+        <title>
+          {`${DOMPurify.sanitize(subject)} Resources | ${DOMPurify.sanitize(
+            programName
+          )} - Semester ${DOMPurify.sanitize(semester)}`}
+        </title>
+        <meta
+          name="description"
+          content={`Find study notes, PYQs, assignments, and syllabus for ${DOMPurify.sanitize(
+            subject
+          )} in ${DOMPurify.sanitize(
+            programName
+          )} - Semester ${DOMPurify.sanitize(
+            semester
+          )}. Access curated resources to boost your preparation.`}
+        />
+        <meta
+          name="keywords"
+          content={`${subject} resources, ${programName} ${semester}, ${subject} notes, ${subject} assignments, ${subject} PYQ, ${subject} syllabus`}
+        />
+        <link
+          rel="canonical"
+          href={`https://yourdomain.com/programs/${encodeURIComponent(
+            programName
+          )}/semesters/${encodeURIComponent(
+            semester
+          )}/subjects/${encodeURIComponent(subject)}/resources`}
+        />
+      </Helmet>
       <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">
         {DOMPurify.sanitize(subject)} Resources
       </h1>

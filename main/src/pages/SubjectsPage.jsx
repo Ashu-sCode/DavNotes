@@ -1,3 +1,4 @@
+// src/pages/SubjectsPage.jsx
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -6,6 +7,7 @@ import SubjectCard from "../components/cards/SubjectCard";
 import { Search, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
+import { Helmet } from "react-helmet-async";
 
 export default function SubjectsPage() {
   const { programName, semester } = useParams();
@@ -103,13 +105,28 @@ export default function SubjectsPage() {
     exit: { opacity: 0, y: -20 },
   };
 
+  const cleanProgram = DOMPurify.sanitize(programName);
+  const cleanSemester = DOMPurify.sanitize(semester);
+
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
+      {/* ✅ SEO Helmet */}
+      <Helmet>
+        <title>{`${cleanProgram} - Semester ${cleanSemester} Subjects | DavNotes`}</title>
+        <meta
+          name="description"
+          content={`Explore all subjects for ${cleanProgram}, Semester ${cleanSemester}. Access free notes, previous year papers, and study materials to prepare for exams.`}
+        />
+        <meta
+          name="keywords"
+          content={`${cleanProgram} semester ${cleanSemester} subjects, ${cleanProgram} notes, ${cleanProgram} syllabus, DavNotes, free resources`}
+        />
+      </Helmet>
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 dark:text-gray-50">
-          {DOMPurify.sanitize(programName)} - Semester{" "}
-          {DOMPurify.sanitize(semester)}
+          {cleanProgram} - Semester {cleanSemester}
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           Choose a subject to explore resources.
@@ -151,8 +168,7 @@ export default function SubjectsPage() {
           <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md">
             No subjects listed for{" "}
             <span className="font-medium">
-              {DOMPurify.sanitize(programName)} - Semester{" "}
-              {DOMPurify.sanitize(semester)}
+              {cleanProgram} - Semester {cleanSemester}
             </span>
             . Try adjusting your search or check back later.
           </p>

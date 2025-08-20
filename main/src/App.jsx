@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PrivateRoute from "./routes/PrivateRoute";
 import Spinner from "./utils/Spinner"; // optional spinner component
+
 import PageTracking from "./components/PageTracking";
 
 // Public Pages (Lazy Loaded)
@@ -59,7 +60,7 @@ function App() {
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow">
-          <PageTracking/>
+          <PageTracking />
           <Suspense
             fallback={
               <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -84,7 +85,6 @@ function App() {
                 element={<ResourcesPage />}
               />
 
-            
               {/* Join as Uploader */}
               <Route path="/join-as-uploader" element={<JoinAsUploader />} />
               <Route
@@ -112,7 +112,7 @@ function App() {
                         <Route path="dashboard" element={<Dashboard />} />
                         <Route path="manage" element={<ManageResource />} />
                         <Route path="manage-users" element={<ManageUsers />} />
-                        
+
                         <Route
                           path="*"
                           element={<Navigate to="/not-authorized" />}
@@ -127,17 +127,17 @@ function App() {
               <Route
                 path="/profile"
                 element={
-                  <PrivateRoute roles={["admin" , "uploader"]}>
+                  <PrivateRoute roles={["admin", "uploader"]}>
                     <AdminLayout>
                       <AdminProfile />
                     </AdminLayout>
                   </PrivateRoute>
                 }
               />
-                  <Route
+              <Route
                 path="/my-uploads"
                 element={
-                  <PrivateRoute roles={["admin" , "uploader"]}>
+                  <PrivateRoute roles={["admin", "uploader"]}>
                     <AdminLayout>
                       <MyUploads />
                     </AdminLayout>
@@ -145,7 +145,6 @@ function App() {
                 }
               />
 
-             
               {/* CMS Routes */}
               <Route
                 path="/cms/*"
@@ -172,7 +171,7 @@ function App() {
                     <UploaderLayout>
                       <Routes>
                         <Route path="dashboard" element={<DashboardPage />} />
-                        
+
                         <Route
                           path="*"
                           element={<Navigate to="/not-authorized" />}

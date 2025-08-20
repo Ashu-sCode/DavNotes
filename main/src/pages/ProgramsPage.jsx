@@ -9,9 +9,11 @@ import ProgramCard from "../components/cards/ProgramCard";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 
+// 🆕 Import Helmet
+import { Helmet } from "react-helmet-async";
+
 const CACHE_KEY = "programs_cache_v1";
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
-
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
@@ -27,7 +29,7 @@ const ProgramsPage = () => {
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp < CACHE_TTL) {
           setPrograms(data);
-          setLoading(false); // show cached immediately
+          setLoading(false);
         }
       } catch (err) {
         console.warn("Failed to parse cached programs", err);
@@ -58,7 +60,6 @@ const ProgramsPage = () => {
         setPrograms(sortedPrograms);
         setLoading(false);
 
-        // update cache
         localStorage.setItem(
           CACHE_KEY,
           JSON.stringify({ data: sortedPrograms, timestamp: Date.now() })
@@ -90,6 +91,19 @@ const ProgramsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+      {/* 🆕 SEO with Helmet */}
+      <Helmet>
+        <title>Courses & Programs | DavNotes 📘</title>
+        <meta
+          name="description"
+          content="Explore DAV University programs such as BCA, BBA, MBA, and more. Download previous year papers, notes, syllabus, and assignments organized by course."
+        />
+        <meta
+          name="keywords"
+          content="DAV Notes, DAV University programs, BCA Notes, BBA Notes, MBA Notes, previous year papers, DAV University syllabus, college resources"
+        />
+      </Helmet>
+
       {/* Header */}
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-green-100 mb-2">
         Courses
