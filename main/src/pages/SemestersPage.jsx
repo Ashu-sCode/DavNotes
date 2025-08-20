@@ -9,8 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import toast from "react-hot-toast";
 
-// 🆕 Import Helmet for SEO
-import { Helmet } from "react-helmet-async";
+
 
 const CACHE_DURATION = 1000 * 60 * 30; // 15 minutes
 
@@ -107,18 +106,7 @@ export default function SemestersPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-      {/* 🆕 SEO */}
-      <Helmet>
-        <title>{`${safeProgramName} Semesters | DavNotes 📘`}</title>
-        <meta
-          name="description"
-          content={`Browse all semesters for ${safeProgramName} at DAV University. Access notes, syllabus, assignments, and previous year papers.`}
-        />
-        <meta
-          name="keywords"
-          content={`${safeProgramName} semesters, DAV University notes, ${safeProgramName} syllabus, ${safeProgramName} resources, previous year papers, college notes`}
-        />
-      </Helmet>
+   
 
       {/* Header Section */}
       <div className="relative h-48 rounded-xl overflow-hidden mb-8">

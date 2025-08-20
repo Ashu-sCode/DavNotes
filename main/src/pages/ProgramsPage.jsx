@@ -9,9 +9,6 @@ import ProgramCard from "../components/cards/ProgramCard";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 
-// 🆕 Import Helmet
-import { Helmet } from "react-helmet-async";
-
 const CACHE_KEY = "programs_cache_v1";
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
 
@@ -89,98 +86,143 @@ const ProgramsPage = () => {
     [programs, sanitizedSearch]
   );
 
+  const domain = "https://davnotes.netlify.app";
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
-      {/* 🆕 SEO with Helmet */}
-      <Helmet>
-        <title>Courses & Programs | DavNotes 📘</title>
-        <meta
-          name="description"
-          content="Explore DAV University programs such as BCA, BBA, MBA, and more. Download previous year papers, notes, syllabus, and assignments organized by course."
-        />
-        <meta
-          name="keywords"
-          content="DAV Notes, DAV University programs, BCA Notes, BBA Notes, MBA Notes, previous year papers, DAV University syllabus, college resources"
-        />
-      </Helmet>
+    <>
+      {/* SEO / Metadata */}
+      <title>{programName} - DavNotes | Notes, PYQs & Assignments</title>
+      <meta
+        name="description"
+        content={`Explore ${programName} courses on DavNotes. Access notes, previous year question papers, syllabus, and assignments from DAV College & Punjab University.`}
+      />
+      <meta
+        name="keywords"
+        content={`DavNotes, ${programName}, DAV College, DavCollege Notes, Punjab University notes, notes, syllabus, previous year papers, exams, assignments`}
+      />
+      <link rel="canonical" href={`${domain}/program/${programName}`} />
 
-      {/* Header */}
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-green-100 mb-2">
-        Courses
-      </h1>
-      <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base md:text-lg">
-        Choose your course to explore semesters, subjects, and downloadable resources.
-      </p>
+      {/* Open Graph / Twitter */}
+      <meta property="og:title" content={`${programName} - DavNotes`} />
+      <meta
+        property="og:description"
+        content={`Access ${programName} courses with notes, PYQs, syllabus, and assignments from DAV College and Punjab University.`}
+      />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content={`${domain}/program/${programName}`} />
+      <meta property="og:image" content={`${domain}/preview.png`} />
 
-      {/* Search Bar */}
-      <div className="mb-8 flex justify-center sm:justify-start">
-        <input
-          type="text"
-          placeholder="Search courses..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-80 md:w-96 px-4 py-2 rounded-lg border 
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={`${programName} - DavNotes`} />
+      <meta
+        name="twitter:description"
+        content={`Access ${programName} courses with notes, PYQs, syllabus, and assignments from DAV College and Punjab University.`}
+      />
+      <meta name="twitter:image" content={`${domain}/preview.png`} />
+
+      {/* JSON-LD Structured Data */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Course",
+          name: `${programName} Courses`,
+          description: `DavNotes provides ${programName} students with notes, previous year papers, syllabus, and assignments from DAV College & Punjab University.`,
+          provider: {
+            "@type": "EducationalOrganization",
+            name: "DavNotes",
+            sameAs: domain,
+          },
+          hasCourseInstance: semesters.map((s, index) => ({
+            "@type": "CourseInstance",
+            name: `${programName} Semester ${s.name}`,
+            courseMode: "online",
+            numberOfCredits: s.count,
+            url: `${domain}/program/${programName}/semester/${s.name}`,
+          })),
+        })}
+      </script>
+
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+        {/* Header */}
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-green-100 mb-2">
+          Courses
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base md:text-lg">
+          Choose your course to explore semesters, subjects, and downloadable
+          resources.
+        </p>
+
+        {/* Search Bar */}
+        <div className="mb-8 flex justify-center sm:justify-start">
+          <input
+            type="text"
+            placeholder="Search courses..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full sm:w-80 md:w-96 px-4 py-2 rounded-lg border 
                      border-gray-300 dark:border-gray-700 
                      dark:bg-gray-800 dark:text-white 
                      focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-          aria-label="Search courses"
-        />
-      </div>
+            aria-label="Search courses"
+          />
+        </div>
 
-      {/* Loading state */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-48 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse shadow-sm"
-            />
-          ))}
-        </div>
-      ) : filteredPrograms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center py-20">
-          <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-6">
-            <GraduationCap className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
-            No courses available
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6 text-sm sm:text-base">
-            We couldn’t find any courses right now. Try refreshing or check back later.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md"
-          >
-            Refresh
-          </button>
-        </div>
-      ) : (
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
-          >
-            {filteredPrograms.map((p) => (
-              <motion.div
-                key={p.name}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ProgramCard
-                  name={p.name}
-                  count={p.count}
-                  onClick={() => openProgram(p.name)}
-                />
-              </motion.div>
+        {/* Loading state */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-48 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse shadow-sm"
+              />
             ))}
-          </motion.div>
-        </AnimatePresence>
-      )}
-    </div>
+          </div>
+        ) : filteredPrograms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center py-20">
+            <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mb-6">
+              <GraduationCap className="w-10 h-10 text-indigo-600 dark:text-indigo-300" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+              No courses available
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6 text-sm sm:text-base">
+              We couldn’t find any courses right now. Try refreshing or check
+              back later.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-md"
+            >
+              Refresh
+            </button>
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              {filteredPrograms.map((p) => (
+                <motion.div
+                  key={p.name}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ProgramCard
+                    name={p.name}
+                    count={p.count}
+                    onClick={() => openProgram(p.name)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        )}
+      </div>
+    </>
   );
 };
 

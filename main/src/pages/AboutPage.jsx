@@ -2,7 +2,7 @@
 import React from "react";
 import { BookOpen, FileText, Layers, Users, Linkedin } from "lucide-react";
 import { motion } from "framer-motion";
-import { Helmet } from "react-helmet-async"; // ✅ SEO
+
 
 export default function AboutPage() {
   const features = [
@@ -33,8 +33,7 @@ export default function AboutPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-24 pb-16">
-      {/* ✅ SEO Meta Tags */}
-      <Helmet>
+    
         <title>About DavNotes | Organized Study Resources</title>
         <meta
           name="description"
@@ -52,7 +51,7 @@ export default function AboutPage() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://davnotes.vercel.app/about" />
         <meta property="og:site_name" content="DavNotes" />
-      </Helmet>
+     
 
       {/* Page Header */}
       <motion.div

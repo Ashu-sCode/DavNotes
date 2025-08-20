@@ -7,7 +7,7 @@ import SubjectCard from "../components/cards/SubjectCard";
 import { Search, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
-import { Helmet } from "react-helmet-async";
+
 
 export default function SubjectsPage() {
   const { programName, semester } = useParams();
@@ -110,18 +110,7 @@ export default function SubjectsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-      {/* ✅ SEO Helmet */}
-      <Helmet>
-        <title>{`${cleanProgram} - Semester ${cleanSemester} Subjects | DavNotes`}</title>
-        <meta
-          name="description"
-          content={`Explore all subjects for ${cleanProgram}, Semester ${cleanSemester}. Access free notes, previous year papers, and study materials to prepare for exams.`}
-        />
-        <meta
-          name="keywords"
-          content={`${cleanProgram} semester ${cleanSemester} subjects, ${cleanProgram} notes, ${cleanProgram} syllabus, DavNotes, free resources`}
-        />
-      </Helmet>
+   
 
       {/* Header */}
       <div className="mb-8">
