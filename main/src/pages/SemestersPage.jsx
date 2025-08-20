@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import toast from "react-hot-toast";
 import Breadcrumb from "../components/BreadCrumb";
+import useMeta from "../hooks/useMeta";
 
 const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
 const domain = "https://davnotes.netlify.app";
@@ -195,6 +196,17 @@ export default function SemestersPage() {
     visible: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 },
   };
+
+    const ogImage = `${window.location.origin}/api/og?title=${encodeURIComponent(
+    programName
+  )}&subtitle=Programs&type=program`;
+
+  useMeta({
+    title: `${programName} | DavNotes`,
+    description: `Explore semesters and resources for ${programName} program.`,
+    ogImage,
+    url: window.location.href,
+  });
 
   return (
     <>

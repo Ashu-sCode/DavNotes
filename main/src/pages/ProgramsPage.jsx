@@ -9,6 +9,7 @@ import ProgramCard from "../components/cards/ProgramCard";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 import Breadcrumb from "../components/BreadCrumb";
+import useMeta from "../hooks/useMeta";
 
 const CACHE_KEY = "programs_cache_v1";
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
@@ -77,6 +78,7 @@ const ProgramsPage = () => {
   const openProgram = (programName) => {
     navigate(`/program/${encodeURIComponent(programName)}`);
   };
+  
 
   const sanitizedSearch = useMemo(() => DOMPurify.sanitize(search), [search]);
 
@@ -104,6 +106,8 @@ const ProgramsPage = () => {
       url: `${domain}/program/${encodeURIComponent(p.name)}`,
     })),
   };
+
+ 
 
   return (
     <>
@@ -138,11 +142,9 @@ const ProgramsPage = () => {
 
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
-    
-
       {/* Page Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
-          <Breadcrumb />
+        <Breadcrumb />
         {/* Header */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-green-100 mb-2">
           Courses

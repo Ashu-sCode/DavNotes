@@ -8,6 +8,7 @@ import { Search, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import Breadcrumb from "../components/BreadCrumb";
+import useMeta from "../hooks/useMeta";
 
 const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 const domain = "https://davnotes.netlify.app";
@@ -101,6 +102,17 @@ export default function SubjectsPage() {
     );
     setTwitter("twitter:image", `${domain}/preview.png`);
   }, [safeProgramName, safeSemester]);
+
+    const ogImage = `${window.location.origin}/api/og?title=${encodeURIComponent(
+    `Semester ${semester}`
+  )}&subtitle=${encodeURIComponent(programName)}&type=semester`;
+
+  useMeta({
+    title: `${programName} - Semester ${semester} | DavNotes`,
+    description: `Explore subjects and resources for ${programName}, Semester ${semester}.`,
+    ogImage,
+    url: window.location.href,
+  });
 
   // ---- Fetch subjects with caching ----
   useEffect(() => {

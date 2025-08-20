@@ -5,11 +5,14 @@ import { auth, db } from "../api/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import useMeta from "../hooks/useMeta";
 
 export default function LandingPage() {
   const [user, setUser] = useState(null);
   const [dashboardLink, setDashboardLink] = useState("/programs");
   const [loading, setLoading] = useState(true);
+  const ogImage = `${window.location.origin}/api/og?title=Welcome+to+DavNotes&type=home`;
+
 
   // ✅ Auth & User Role
   useEffect(() => {
@@ -60,6 +63,13 @@ export default function LandingPage() {
     },
   ];
 
+    useMeta({
+    title: "DavNotes | Organized Study Resources",
+    description: "Find notes, PYQs, assignments, and syllabus for your semester.",
+    ogImage,
+    url: window.location.href,
+  });
+
   // ✅ Loading Screen
   if (loading) {
     return (
@@ -101,6 +111,10 @@ export default function LandingPage() {
         content="Access organized notes, previous year question papers, and assignments for BCA & BBA students."
       />
       <meta name="twitter:image" content="https://davnotes.in/preview.png" />
+
+        const ogImage = `${window.location.origin}/api/og?title=Welcome+to+DavNotes&type=home`;
+
+
 
       {/* ✅ Main Content */}
       <main className="min-h-screen mt-6 flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
