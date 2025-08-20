@@ -7,13 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:sitemap": "node src/scripts/generate-sitemap.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@tailwindcss/vite": "^4.1.11",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.6",
+    "dotenv": "^17.2.1",
     "firebase": "^12.0.0",
     "flowbite": "^3.1.2",
     "flowbite-react": "^0.12.6",

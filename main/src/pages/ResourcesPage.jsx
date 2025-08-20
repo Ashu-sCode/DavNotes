@@ -8,6 +8,7 @@ import ResourceCard from "../components/cards/ResourceCard";
 import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import { logEventUtil } from "../utils/LogEventUtil";
+import Breadcrumb from "../components/BreadCrumb";
 
 const domain = "https://davnotes.netlify.app";
 
@@ -257,6 +258,8 @@ export default function ResourcesPage() {
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+
+      <Breadcrumb/>
 
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
         <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">

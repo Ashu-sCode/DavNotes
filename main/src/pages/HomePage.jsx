@@ -1,202 +1,152 @@
-// src/pages/AboutPage.jsx
-import React from "react";
-import { BookOpen, FileText, Layers, Users, Linkedin } from "lucide-react";
+// src/pages/LandingPage.jsx
+import React, { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../api/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import DOMPurify from "dompurify";
 
-export default function AboutPage() {
+export default function LandingPage() {
+  const [user, setUser] = useState(null);
+  const [dashboardLink, setDashboardLink] = useState("/programs");
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Auth & User Role
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        setUser(null);
+        setDashboardLink("/programs");
+        setLoading(false);
+        return;
+      }
+
+      setUser(currentUser);
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          const { role } = userDoc.data();
+          setDashboardLink(
+            role === "admin"
+              ? "/admin/dashboard"
+              : role === "uploader"
+              ? "/uploader/dashboard"
+              : "/programs"
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role:", err);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const features = [
     {
-      icon: <BookOpen className="w-8 h-8 text-indigo-600 dark:text-indigo-300" />,
-      title: "Access Notes & PYQs",
-      description:
-        "Find semester-wise notes, previous year question papers, assignments, and syllabus in one place.",
+      title: "📄 Previous Year Papers",
+      description: "Access PYQs semester-wise to prepare better for exams.",
     },
     {
-      icon: <FileText className="w-8 h-8 text-green-600 dark:text-green-300" />,
-      title: "Easy Downloads",
-      description: "Quickly download any resource with one click for offline study.",
+      title: "📝 Notes",
+      description: "Find organized notes uploaded by fellow students.",
     },
     {
-      icon: <Layers className="w-8 h-8 text-pink-600 dark:text-pink-300" />,
-      title: "Organized & Filtered",
-      description:
-        "Browse by program, semester, or subject. Use filters to quickly find what you need.",
-    },
-    {
-      icon: <Users className="w-8 h-8 text-yellow-600 dark:text-yellow-300" />,
-      title: "Verified Resources",
-      description:
-        "All resources are verified and uploaded by admins or trusted contributors.",
+      title: "📚 Assignments & Syllabus",
+      description: "Get access to syllabus and assignments for quick reference.",
     },
   ];
 
-  // ---- JSON-LD Structured Data ----
-  const jsonLdOrganization = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "DavNotes",
-    "url": "https://davnotes.vercel.app",
-    "logo": "https://davnotes.vercel.app/logo.png",
-    "sameAs": [
-      "https://github.com/ashu-sCode",
-      "https://www.linkedin.com/in/ashutosh452",
-      "https://portfolio-ashutoshh.netlify.app/"
-    ],
-    "description": "DavNotes is a student-focused platform providing semester-wise notes, previous year question papers, assignments, and syllabus for easy access and organized studying.",
-    "founder": {
-      "@type": "Person",
-      "name": "Ashutosh",
-      "url": "https://portfolio-ashutoshh.netlify.app/"
-    },
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "DavNotes Features",
-      "itemListElement": features.map((f) => ({
-        "@type": "ListItem",
-        "name": DOMPurify.sanitize(f.title),
-        "description": DOMPurify.sanitize(f.description)
-      }))
-    }
-  };
-
-  // ---- FAQ Structured Data ----
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is DavNotes?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "DavNotes is a student-focused platform that provides organized access to semester-wise notes, previous year question papers, assignments, and syllabus."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Who can use DavNotes?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Any student looking for structured educational resources, especially BCA students, can use DavNotes for free."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I download resources for offline study?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, all resources including notes, PYQs, assignments, and syllabus can be downloaded for offline use with a single click."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Are the resources verified?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, all resources are verified and uploaded either by admins or trusted contributors."
-        }
-      }
-    ]
-  };
+  // ✅ Loading Screen
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <span className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full"></span>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 pt-24 pb-16">
-
-      {/* SEO Tags */}
-      <title>About DavNotes | Organized Study Resources</title>
+    <>
+      {/* ✅ SEO & Social Metadata */}
+      <title>DavNotes - Download Notes, PYQs & Assignments</title>
       <meta
         name="description"
-        content="Learn more about DavNotes – a platform built by students for students to easily access notes, PYQs, assignments, and syllabus in one place."
+        content="DavNotes provides BCA & BBA students access to notes, previous year question papers, assignments, and syllabus for their semester."
       />
       <meta
         name="keywords"
-        content="About DavNotes, student platform, BCA notes, college resources, semester notes, previous year question papers, assignments, syllabus"
+        content="DavNotes, BCA notes, BBA notes, PYQs, assignments, syllabus, previous year question papers"
       />
-      <meta property="og:title" content="About DavNotes | Student Resource Platform" />
+      <meta name="author" content="DAV College Chandigarh" />
+      <link rel="canonical" href="https://davnotes.in/" />
+
+      {/* Open Graph / Social Sharing */}
+      <meta property="og:title" content="DavNotes - Download Notes & PYQs" />
       <meta
         property="og:description"
-        content="DavNotes is designed to help students access verified notes, PYQs, assignments, and syllabus easily."
+        content="Access organized notes, previous year question papers, and assignments for BCA & BBA students."
       />
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://davnotes.vercel.app/about" />
-      <meta property="og:site_name" content="DavNotes" />
-      <script type="application/ld+json">{JSON.stringify(jsonLdOrganization)}</script>
-      <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      <meta property="og:url" content="https://davnotes.in/" />
+      <meta property="og:image" content="https://davnotes.in/preview.png" />
 
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center mb-12"
-      >
-        <h1 className="text-4xl md:text-5xl font-bold dark:text-gray-50 mb-4">
-          About DavNotes
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          DavNotes is a student-focused platform designed to help students easily access notes, previous year question papers, assignments, and syllabus. Our goal is to make studying organized, simple, and effective.
-        </p>
-      </motion.div>
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="DavNotes - Download Notes & PYQs" />
+      <meta
+        name="twitter:description"
+        content="Access organized notes, previous year question papers, and assignments for BCA & BBA students."
+      />
+      <meta name="twitter:image" content="https://davnotes.in/preview.png" />
 
-      {/* Features Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-        {features.map((feature, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, duration: 0.5 }}
-            className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-md hover:shadow-xl transition"
-          >
-            <div className="mb-4">{feature.icon}</div>
-            <h3 className="text-lg font-bold mb-2 dark:text-gray-50">{feature.title}</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">{feature.description}</p>
-          </motion.div>
-        ))}
-      </div>
+      {/* ✅ Main Content */}
+      <main className="min-h-screen mt-6 flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
+        {/* Hero Section */}
+        <section className="flex-1 flex flex-col justify-center items-center px-6 py-16">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-700 dark:text-blue-400 mb-6">
+            Welcome to DavNotes 📘
+          </h1>
 
-      {/* About the Creator */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className="bg-indigo-50 dark:bg-gray-800 rounded-xl p-8 text-center"
-      >
-        <h2 className="text-2xl font-bold mb-4 dark:text-gray-50">About the Creator</h2>
-        <p className="text-gray-700 dark:text-gray-300 mb-4">
-          This platform is created by <span className="font-medium">Ashutosh</span>, a BCA 3rd-year student (2025-26 batch), passionate about building educational tools for students.
-          The goal is to make learning resources easily accessible and well-organized.
-        </p>
-        <div className="flex justify-center gap-6">
-          <a
-            href="https://portfolio-ashutoshh.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-indigo-600 dark:text-indigo-300 hover:underline flex items-center gap-1"
-          >
-            Portfolio <BookOpen className="w-5 h-5" />
-          </a>
-          <a
-            href="https://github.com/ashu-sCode"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-800 dark:text-gray-50 hover:underline flex items-center gap-1"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://www.linkedin.com/in/ashutosh452"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-          >
-            LinkedIn <Linkedin className="w-5 h-5" />
-          </a>
-        </div>
-      </motion.div>
-    </div>
+          <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mb-10">
+            A platform where you can find and download previous year question
+            papers, notes, assignments, and syllabus for your semester.
+          </p>
+
+          {/* CTA */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to={dashboardLink}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md text-lg font-medium transition"
+            >
+              {user ? "Go to Dashboard" : "Browse Resources"}
+            </Link>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="py-16 px-6 bg-white dark:bg-gray-900">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {features.map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="p-6 rounded-xl shadow-md bg-gray-50 dark:bg-gray-800 hover:scale-105 transform transition"
+              >
+                <h2 className="text-xl font-semibold mb-2 text-blue-600 dark:text-blue-400">
+                  {feature.title}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </>
   );
 }

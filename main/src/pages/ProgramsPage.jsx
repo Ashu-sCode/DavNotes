@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import ProgramCard from "../components/cards/ProgramCard";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
+import Breadcrumb from "../components/BreadCrumb";
 
 const CACHE_KEY = "programs_cache_v1";
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
@@ -91,16 +92,17 @@ const ProgramsPage = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": "Courses / Programs on DavNotes",
-    "description": "List of all programs on DavNotes with semesters, notes, PYQs, assignments, and syllabus for DAV College & Punjab University students.",
-    "url": `${domain}/programs`,
-    "numberOfItems": programs.length,
-    "itemListElement": programs.map((p, index) => ({
+    name: "Courses / Programs on DavNotes",
+    description:
+      "List of all programs on DavNotes with semesters, notes, PYQs, assignments, and syllabus for DAV College & Punjab University students.",
+    url: `${domain}/programs`,
+    numberOfItems: programs.length,
+    itemListElement: programs.map((p, index) => ({
       "@type": "ListItem",
-      "position": index + 1,
-      "name": p.name,
-      "url": `${domain}/program/${encodeURIComponent(p.name)}`
-    }))
+      position: index + 1,
+      name: p.name,
+      url: `${domain}/program/${encodeURIComponent(p.name)}`,
+    })),
   };
 
   return (
@@ -136,6 +138,8 @@ const ProgramsPage = () => {
 
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
+      <Breadcrumb />
+
       {/* Page Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         {/* Header */}
@@ -143,7 +147,8 @@ const ProgramsPage = () => {
           Courses
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base md:text-lg">
-          Choose your course to explore semesters, subjects, and downloadable resources.
+          Choose your course to explore semesters, subjects, and downloadable
+          resources.
         </p>
 
         {/* Search Bar */}
@@ -180,7 +185,8 @@ const ProgramsPage = () => {
               No courses available
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6 text-sm sm:text-base">
-              We couldn’t find any courses right now. Try refreshing or check back later.
+              We couldn’t find any courses right now. Try refreshing or check
+              back later.
             </p>
             <button
               onClick={() => window.location.reload()}
