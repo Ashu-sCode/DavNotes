@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const CACHE_KEY = "programs_cache_v1";
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+const domain = "https://davnotes.netlify.app";
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
@@ -86,70 +87,63 @@ const ProgramsPage = () => {
     [programs, sanitizedSearch]
   );
 
-  const domain = "https://davnotes.netlify.app";
+  // ---- JSON-LD for all programs ----
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Courses / Programs on DavNotes",
+    "description": "List of all programs on DavNotes with semesters, notes, PYQs, assignments, and syllabus for DAV College & Punjab University students.",
+    "url": `${domain}/programs`,
+    "numberOfItems": programs.length,
+    "itemListElement": programs.map((p, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": p.name,
+      "url": `${domain}/program/${encodeURIComponent(p.name)}`
+    }))
+  };
 
   return (
     <>
-      {/* SEO / Metadata */}
-      <title>{programName} - DavNotes | Notes, PYQs & Assignments</title>
+      {/* SEO Tags */}
+      <title>Programs & Courses | DavNotes</title>
       <meta
         name="description"
-        content={`Explore ${programName} courses on DavNotes. Access notes, previous year question papers, syllabus, and assignments from DAV College & Punjab University.`}
+        content="Explore all programs/courses on DavNotes. Access semester-wise notes, previous year papers, assignments, and syllabus for DAV College & Punjab University students."
       />
       <meta
         name="keywords"
-        content={`DavNotes, ${programName}, DAV College, DavCollege Notes, Punjab University notes, notes, syllabus, previous year papers, exams, assignments`}
+        content="DavNotes, BCA, BBA, BA, BCOM, DAV College, DavCollege Notes, Punjab University notes, notes, syllabus, previous year papers, exams, assignments, DAV College assignments, PU exams, Panjab University Exams"
       />
-      <link rel="canonical" href={`${domain}/program/${programName}`} />
+      <link rel="canonical" href={`${domain}/programs`} />
 
-      {/* Open Graph / Twitter */}
-      <meta property="og:title" content={`${programName} - DavNotes`} />
+      <meta property="og:title" content="Programs & Courses | DavNotes" />
       <meta
         property="og:description"
-        content={`Access ${programName} courses with notes, PYQs, syllabus, and assignments from DAV College and Punjab University.`}
+        content="Explore all programs/courses on DavNotes. Access semester-wise notes, PYQs, assignments, and syllabus for DAV College & Punjab University students."
       />
       <meta property="og:type" content="website" />
-      <meta property="og:url" content={`${domain}/program/${programName}`} />
+      <meta property="og:url" content={`${domain}/programs`} />
       <meta property="og:image" content={`${domain}/preview.png`} />
 
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={`${programName} - DavNotes`} />
+      <meta name="twitter:title" content="Programs & Courses | DavNotes" />
       <meta
         name="twitter:description"
-        content={`Access ${programName} courses with notes, PYQs, syllabus, and assignments from DAV College and Punjab University.`}
+        content="Explore all programs/courses on DavNotes. Access semester-wise notes, PYQs, assignments, and syllabus for DAV College & Punjab University students."
       />
       <meta name="twitter:image" content={`${domain}/preview.png`} />
 
-      {/* JSON-LD Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Course",
-          name: `${programName} Courses`,
-          description: `DavNotes provides ${programName} students with notes, previous year papers, syllabus, and assignments from DAV College & Punjab University.`,
-          provider: {
-            "@type": "EducationalOrganization",
-            name: "DavNotes",
-            sameAs: domain,
-          },
-          hasCourseInstance: semesters.map((s, index) => ({
-            "@type": "CourseInstance",
-            name: `${programName} Semester ${s.name}`,
-            courseMode: "online",
-            numberOfCredits: s.count,
-            url: `${domain}/program/${programName}/semester/${s.name}`,
-          })),
-        })}
-      </script>
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
+      {/* Page Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
         {/* Header */}
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold dark:text-green-100 mb-2">
           Courses
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base md:text-lg">
-          Choose your course to explore semesters, subjects, and downloadable
-          resources.
+          Choose your course to explore semesters, subjects, and downloadable resources.
         </p>
 
         {/* Search Bar */}
@@ -160,14 +154,14 @@ const ProgramsPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-80 md:w-96 px-4 py-2 rounded-lg border 
-                     border-gray-300 dark:border-gray-700 
-                     dark:bg-gray-800 dark:text-white 
-                     focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                       border-gray-300 dark:border-gray-700 
+                       dark:bg-gray-800 dark:text-white 
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
             aria-label="Search courses"
           />
         </div>
 
-        {/* Loading state */}
+        {/* Loading / No Data / Programs Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -186,8 +180,7 @@ const ProgramsPage = () => {
               No courses available
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6 text-sm sm:text-base">
-              We couldn’t find any courses right now. Try refreshing or check
-              back later.
+              We couldn’t find any courses right now. Try refreshing or check back later.
             </p>
             <button
               onClick={() => window.location.reload()}

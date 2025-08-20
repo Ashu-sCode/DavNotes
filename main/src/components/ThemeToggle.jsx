@@ -14,7 +14,7 @@ export default function ThemeToggle() {
       className="p-2 rounded-full cursor-pointer transition-colors duration-300
                 
                  focus:outline-non
-                 text-gray-800 dark:text-yellow-400"
+                 text-gray-200 dark:text-yellow-400"
       whileTap={{ scale: 0.9 }}
       whileHover={{ scale: 1.1 }}
       animate={{ rotate: theme === "dark" ? 360 : 0 }}

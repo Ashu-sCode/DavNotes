@@ -2,7 +2,7 @@
 import React from "react";
 import { BookOpen, FileText, Layers, Users, Linkedin } from "lucide-react";
 import { motion } from "framer-motion";
-
+import DOMPurify from "dompurify";
 
 export default function AboutPage() {
   const features = [
@@ -31,27 +31,133 @@ export default function AboutPage() {
     },
   ];
 
+  // ---- JSON-LD Structured Data ----
+  const jsonLdOrganization = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "DavNotes",
+    "url": "https://davnotes.vercel.app",
+    "logo": "https://davnotes.vercel.app/logo.png",
+    "sameAs": [
+      "https://github.com/ashu-sCode",
+      "https://www.linkedin.com/in/ashutosh452",
+      "https://portfolio-ashutoshh.netlify.app/"
+    ],
+    "description": "DavNotes is a student-focused platform providing semester-wise notes, previous year question papers, assignments, and syllabus for easy access and organized studying.",
+    "founder": {
+      "@type": "Person",
+      "name": "Ashutosh",
+      "url": "https://portfolio-ashutoshh.netlify.app/"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "DavNotes Features",
+      "itemListElement": features.map((f) => ({
+        "@type": "ListItem",
+        "name": DOMPurify.sanitize(f.title),
+        "description": DOMPurify.sanitize(f.description)
+      }))
+    }
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is DavNotes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "DavNotes is a student-focused platform that provides organized access to semester-wise notes, previous year question papers, assignments, and syllabus."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Who can use DavNotes?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Any student looking for structured educational resources, especially BCA students, can use DavNotes for free."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I download resources for offline study?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, all resources including notes, PYQs, assignments, and syllabus can be downloaded for offline use with a single click."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Are the resources verified?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, all resources are verified and uploaded either by admins or trusted contributors."
+        }
+      }
+    ]
+  };
+
+  // ---- HowTo Structured Data ----
+  const howToJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to find and download resources on DavNotes",
+    "description": "Step-by-step guide to browse and download notes, PYQs, assignments, and syllabus on DavNotes.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Select Program",
+        "text": "Choose your program (e.g., BCA or BBA) from the programs page."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Select Semester",
+        "text": "Pick your semester to view available subjects."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Choose Subject",
+        "text": "Select the subject you want to explore to see all resources."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Filter Resources",
+        "text": "Use filter buttons to find notes, PYQs, assignments, or syllabus quickly."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Download Resources",
+        "text": "Click on the download button to save the resource for offline study."
+      }
+    ]
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 pt-24 pb-16">
-    
-        <title>About DavNotes | Organized Study Resources</title>
-        <meta
-          name="description"
-          content="Learn more about DavNotes – a platform built by students for students to easily access notes, PYQs, assignments, and syllabus in one place."
-        />
-        <meta
-          name="keywords"
-          content="About DavNotes, student platform, BCA notes, college resources, semester notes, previous year question papers, assignments, syllabus"
-        />
-        <meta property="og:title" content="About DavNotes | Student Resource Platform" />
-        <meta
-          property="og:description"
-          content="DavNotes is designed to help students access verified notes, PYQs, assignments, and syllabus easily."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://davnotes.vercel.app/about" />
-        <meta property="og:site_name" content="DavNotes" />
-     
+
+      {/* SEO Tags */}
+      <title>About DavNotes | Organized Study Resources</title>
+      <meta
+        name="description"
+        content="Learn more about DavNotes – a platform built by students for students to easily access notes, PYQs, assignments, and syllabus in one place."
+      />
+      <meta
+        name="keywords"
+        content="About DavNotes, student platform, BCA notes, college resources, semester notes, previous year question papers, assignments, syllabus"
+      />
+      <meta property="og:title" content="About DavNotes | Student Resource Platform" />
+      <meta
+        property="og:description"
+        content="DavNotes is designed to help students access verified notes, PYQs, assignments, and syllabus easily."
+      />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://davnotes.vercel.app/about" />
+      <meta property="og:site_name" content="DavNotes" />
+      <script type="application/ld+json">{JSON.stringify(jsonLdOrganization)}</script>
+      <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      <script type="application/ld+json">{JSON.stringify(howToJsonLd)}</script>
 
       {/* Page Header */}
       <motion.div

@@ -1,7 +1,3 @@
-# robots.txt
-
 User-agent: *
-Allow: /
-Disallow: /admin/*
 Disallow: /admin
-Sitemap: https://davnotes.netlify.app/sitemap.xml
+Sitemap: https://davnotes.vercel.app/sitemap.xml
