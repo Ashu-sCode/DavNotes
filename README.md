@@ -1,4 +1,5 @@
 # 📚 DavNotes  
+[![Live Preview](https://img.shields.io/badge/🌐_Live_Preview-00C853?style=for-the-badge&logo=netlify&logoColor=white)](https://davnotes.netlify.app/)
 
 > A student-friendly platform to **download notes, previous year question papers, assignments, and syllabus** — with a robust CMS for verified uploaders and admins.  
 
