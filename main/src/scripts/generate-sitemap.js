@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Base URL of your deployed site
-const BASE_URL = "https://davnotes.vercel.app";
+const BASE_URL = "https://davnotes.netlify.app";
 
 // Utility to create XML entry
 const createUrl = (loc, lastmod = new Date().toISOString(), changefreq = "weekly", priority = "0.8") => `
