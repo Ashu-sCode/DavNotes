@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: /admin
 Disallow: /uploader
-Sitemap: https://davnotes.vercel.app/sitemap.xml
+Sitemap: https://davnotes.netlify.app/sitemap.xml
