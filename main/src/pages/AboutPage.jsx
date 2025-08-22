@@ -202,7 +202,7 @@ export default function AboutPage() {
       >
         <h2 className="text-2xl font-bold mb-4 dark:text-gray-50">About the Creator</h2>
         <p className="text-gray-700 dark:text-gray-300 mb-4">
-          This platform is created by <span className="font-medium">Ashutosh</span>, a BCA 3rd-year student (2025-26 batch), passionate about building educational tools for students.
+          This platform is created by <span className="font-medium">Ashutosh</span>, a BCA 3rd-year student (2025-26 batch) in Dav College 10 Chandigarh, passionate about building educational tools for students.
           The goal is to make learning resources easily accessible and well-organized.
         </p>
         <div className="flex justify-center gap-6">
