@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "prebuild": "node generate-sitemap.js",
+    "prebuild": "node src/scripts/generate-sitemap.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
