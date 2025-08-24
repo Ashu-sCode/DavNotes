@@ -52,29 +52,35 @@ export default function LandingPage() {
 
   const features = [
     {
-      title: "Previous Year Papers",
-      description: "Access semester-wise PYQs to prepare more effectively for exams.",
+      title: "Previous Year Question Papers",
+      description:
+        "Download semester-wise previous year question papers (PYQs) for BCA, BBA, and other courses at DAV College. DavNotes makes it easy for students to access exam papers, practice tests, and solved papers to prepare effectively and score higher in exams.",
       icon: FileText,
       color: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
     },
     {
-      title: "Notes",
-      description: "Find organized notes uploaded and shared by fellow students.",
+      title: "Study Notes",
+      description:
+        "Access well-structured and student-friendly notes for all subjects. Explore BCA and BBA notes organized semester-wise, uploaded by verified students, to help you revise quickly and understand concepts with clarity.",
       icon: BookOpen,
-      color: "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
+      color:
+        "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
     },
     {
       title: "Assignments & Syllabus",
-      description: "Quickly access syllabus and assignments for your semester.",
+      description:
+        "Get updated semester-wise syllabus and assignments for your courses. DavNotes ensures that students always have the latest curriculum guidelines, project work, and academic tasks to stay on track throughout their degree.",
       icon: ClipboardList,
-      color: "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300",
+      color:
+        "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300",
     },
   ];
 
   // ✅ SEO Metadata via custom hook
   useMeta({
-    title: "DavNotes | Organized Study Resources",
-    description: "Find notes, PYQs, assignments, and syllabus for your semester.",
+    title: "DavNotes | Previous Year Papers, Notes, Assignments & Syllabus",
+    description:
+      "Access free semester-wise resources for DAV College students, including previous year question papers (PYQs), detailed study notes, assignments, and updated syllabus. Organized and easy-to-download materials to help you prepare effectively for exams.",
     ogImage,
     url: window.location.href,
   });
@@ -107,8 +113,8 @@ export default function LandingPage() {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mb-10"
         >
-          A platform where you can find and download previous year question papers,
-          notes, assignments, and syllabus for your semester.
+          A platform where you can find and download previous year question
+          papers, notes, assignments, and syllabus for your semester.
         </motion.p>
 
         {/* CTA */}
@@ -155,7 +161,9 @@ export default function LandingPage() {
                   <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {feature.description}
+                  </p>
                 </motion.div>
               );
             })}

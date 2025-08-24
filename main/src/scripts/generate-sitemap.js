@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
-import 'dotenv/config';
+import "dotenv/config";
 
 // ✅ Your Firebase config
 const firebaseConfig = {
@@ -21,7 +21,12 @@ const db = getFirestore(app);
 const BASE_URL = "https://davnotes.netlify.app";
 
 // Utility to create XML entry
-const createUrl = (loc, lastmod = new Date().toISOString(), changefreq = "weekly", priority = "0.8") => `
+const createUrl = (
+  loc,
+  lastmod = new Date().toISOString(),
+  changefreq = "weekly",
+  priority = "0.8"
+) => `
   <url>
     <loc>${loc}</loc>
     <lastmod>${lastmod}</lastmod>
@@ -45,17 +50,37 @@ async function generateSitemap() {
 
   const programsSet = new Set(data.map((d) => d.program));
   for (let program of programsSet) {
-    urls.push(createUrl(`${BASE_URL}/programs/${encodeURIComponent(program)}/semesters`));
+    urls.push(
+      createUrl(`${BASE_URL}/programs/${encodeURIComponent(program)}/semesters`)
+    );
 
-    const semestersSet = new Set(data.filter((d) => d.program === program).map((d) => d.semester));
+    const semestersSet = new Set(
+      data.filter((d) => d.program === program).map((d) => d.semester)
+    );
     for (let sem of semestersSet) {
-      urls.push(createUrl(`${BASE_URL}/programs/${encodeURIComponent(program)}/semesters/${encodeURIComponent(sem)}/subjects`));
+      urls.push(
+        createUrl(
+          `${BASE_URL}/programs/${encodeURIComponent(
+            program
+          )}/semesters/${encodeURIComponent(sem)}/subjects`
+        )
+      );
 
       const subjectsSet = new Set(
-        data.filter((d) => d.program === program && d.semester === sem).map((d) => d.subject)
+        data
+          .filter((d) => d.program === program && d.semester === sem)
+          .map((d) => d.subject)
       );
       for (let sub of subjectsSet) {
-        urls.push(createUrl(`${BASE_URL}/programs/${encodeURIComponent(program)}/semesters/${encodeURIComponent(sem)}/subjects/${encodeURIComponent(sub)}/resources`));
+        urls.push(
+          createUrl(
+            `${BASE_URL}/programs/${encodeURIComponent(
+              program
+            )}/semesters/${encodeURIComponent(
+              sem
+            )}/subjects/${encodeURIComponent(sub)}/resources`
+          )
+        );
       }
     }
   }
@@ -63,7 +88,7 @@ async function generateSitemap() {
   // Wrap in <urlset>
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.join("\n")}
+${urls.map((u) => u.trim()).join("\n")}
 </urlset>`;
 
   // ✅ Write to public folder
