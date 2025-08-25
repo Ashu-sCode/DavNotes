@@ -6,6 +6,25 @@ import { Link } from "react-router-dom";
 const ProfileDisplay = ({ profile, uploadedCount, onEdit }) => {
   const firstLetter = profile.fullName ? profile.fullName.charAt(0).toUpperCase() : "?";
 
+   const [animatedCount, setAnimatedCount] = React.useState(0);
+
+    React.useEffect(() => {
+    let start = 0;
+    const end = uploadedCount;
+    if (start === end) {
+      setAnimatedCount(end);
+      return;
+    }
+    let incrementTime = 30;
+    let timer = setInterval(() => {
+      start += 1;
+      setAnimatedCount(start);
+      if (start === end) clearInterval(timer);
+    }, incrementTime);
+    return () => clearInterval(timer);
+  }, [uploadedCount]);
+
+
   return (
     <motion.div
       className="flex flex-col md:flex-row gap-6 items-center md:items-start"
@@ -50,14 +69,7 @@ const ProfileDisplay = ({ profile, uploadedCount, onEdit }) => {
             <div className="flex items-center gap-2 bg-indigo-100 dark:bg-gray-800 px-4 py-2 rounded-lg shadow-inner">
               <Archive size={18} />
               <span className="font-semibold">
-                <motion.span
-                  key={uploadedCount}
-                  initial={{ count: 0 }}
-                  animate={{ count: uploadedCount }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                >
-                  {uploadedCount}
-                </motion.span>
+                {animatedCount}
               </span>
               <span className="ml-1 text-gray-600 dark:text-gray-300 text-sm">Uploads</span>
             </div>

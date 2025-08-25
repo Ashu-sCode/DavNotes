@@ -1,4 +1,4 @@
-// src/components/AdminProfile.jsx
+// main/src/cms/AdminProfile.jsx
 import React, { useState, useEffect } from "react";
 import {
   doc,

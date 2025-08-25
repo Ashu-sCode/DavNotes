@@ -42,9 +42,7 @@ const UploadResource = () => {
   useEffect(() => {
     if (
       !loading &&
-      userRole &&
-      userRole !== "admin" &&
-      userRole !== "uploader"
+      (!userRole || (userRole !== "admin" && userRole !== "uploader"))
     ) {
       toast.error("Access denied");
       navigate("/");

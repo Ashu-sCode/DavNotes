@@ -57,9 +57,9 @@ export const handleUpload = async ({
   setUploading,
   setUploadProgress,
   setError,
+  setUploadTasks,   // ✅ NEW
   currentUser,
 }) => {
-  // Only call preventDefault if event exists
   if (e?.preventDefault) e.preventDefault();
 
   const logError = (...args) => {
@@ -68,7 +68,6 @@ export const handleUpload = async ({
 
   const { title, description, category, program, year, semester, subject, file } = formData;
 
-  // --- Basic validation ---
   if (!file || file.length === 0) {
     toast.error("Please select at least one file to upload.");
     return;
@@ -96,17 +95,16 @@ export const handleUpload = async ({
           continue;
         }
 
-        // --- Compress PDF if needed ---
         let fileItem = rawFile;
         if (fileItem.type === "application/pdf") {
           fileItem = await compressPDF(fileItem);
         }
 
-        // --- Safe filename ---
         const safeName = fileItem.name
           .replace(/[^a-zA-Z0-9_\-.]/g, "_")
           .replace(/_+/g, "_")
           .slice(0, 100);
+
         const extension = safeName.split(".").pop().toLowerCase();
         const timestamp = Date.now();
         const cleanFileName = `${encodeURIComponent(program)}_${encodeURIComponent(
@@ -124,6 +122,9 @@ export const handleUpload = async ({
         const storageRef = ref(storage, storagePath);
         const uploadTask = uploadBytesResumable(storageRef, fileItem);
 
+        // ✅ Save task so FileList can cancel
+        setUploadTasks((prev) => ({ ...prev, [fileItem.name]: uploadTask }));
+
         // --- Track progress ---
         await new Promise((resolve, reject) => {
           uploadTask.on(
@@ -138,10 +139,8 @@ export const handleUpload = async ({
               reject(error);
             },
             async () => {
-              // --- Get file URL ---
               const fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
 
-              // --- Auto-title for PYQ files ---
               let finalTitle = title;
               let paperYear = null;
               if (category.toLowerCase() === "pyq") {
@@ -152,7 +151,6 @@ export const handleUpload = async ({
                 }
               }
 
-              // --- Save metadata to Firestore ---
               await addDoc(collection(db, "resources"), {
                 title: finalTitle,
                 paperYear,
@@ -171,13 +169,19 @@ export const handleUpload = async ({
                 fileSize: fileItem.size,
               });
 
-              // --- Increment user's upload count ---
               try {
                 const userDocRef = doc(db, "users", currentUser.uid);
                 await updateDoc(userDocRef, { uploadedCount: increment(1) });
               } catch (updateError) {
                 logError("Failed to update user's upload count:", updateError);
               }
+
+              // ✅ Remove finished task
+              setUploadTasks((prev) => {
+                const updated = { ...prev };
+                delete updated[fileItem.name];
+                return updated;
+              });
 
               resolve();
             }
@@ -192,7 +196,6 @@ export const handleUpload = async ({
     toast.dismiss();
     // toast.success("🎉 All valid files uploaded successfully!");
 
-    // --- Reset form & progress ---
     setFormData({
       title: "",
       description: "",
@@ -204,6 +207,7 @@ export const handleUpload = async ({
       file: [],
     });
     setUploadProgress({});
+    setUploadTasks({}); // ✅ cleanup
   } catch (err) {
     logError("🔥 Unexpected error:", err);
     toast.dismiss();
@@ -212,3 +216,4 @@ export const handleUpload = async ({
     setUploading(false);
   }
 };
+

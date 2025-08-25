@@ -4,9 +4,78 @@ import { Spinner } from "flowbite-react";
 import { useAuth } from "../context/AuthContext";
 import { handleUpload } from "../hooks/useUploadResource";
 import ProgressBar from "../utils/ProgressBar";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../api/firebase";
 import FetchSubjects from "../utils/admin/FetchSubjects";
+
+// ✅ Small reusable Select component
+const SelectInput = ({
+  name,
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+}) => (
+  <select
+    name={name}
+    value={value}
+    onChange={onChange}
+    required
+    disabled={disabled}
+    className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+  >
+    <option value="">{placeholder}</option>
+    {options.map((opt) =>
+      typeof opt === "object" ? (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ) : (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      )
+    )}
+  </select>
+);
+
+// ✅ FileList component with cancel functionality
+const FileList = ({ files, uploadProgress, onCancel }) => (
+  <ul
+    className="text-sm text-gray-600 dark:text-gray-300 space-y-2"
+    aria-live="polite"
+  >
+    {files.map((f) => {
+      const key = f.name + f.lastModified;
+      const progress = uploadProgress[key] ?? null;
+
+      return (
+        <li key={key} className="flex flex-col space-y-1">
+          <div className="flex justify-between items-center">
+            <span className="truncate">📄 {f.name}</span>
+            {progress !== null && (
+              <button
+                type="button"
+                onClick={() => uploadTasks[fileName]?.cancel()}
+                className="text-red-500 hover:underline text-xs ml-2"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {progress !== null && (
+            <div>
+              <div className="flex justify-between mb-1">
+                <span>{progress}%</span>
+              </div>
+              <ProgressBar progress={progress} />
+            </div>
+          )}
+        </li>
+      );
+    })}
+  </ul>
+);
 
 const UploadForm = () => {
   const { currentUser } = useAuth();
@@ -25,6 +94,7 @@ const UploadForm = () => {
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [uploadTasks, setUploadTasks] = useState({}); // ✅ store active upload tasks
 
   // --- Input sanitization ---
   const sanitizeInput = (input) =>
@@ -56,11 +126,11 @@ const UploadForm = () => {
 
     for (let file of files) {
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`❌ "${file.name}" is not supported.`);
+        setError(`❌ "${file.name}" is not supported.`);
         return false;
       }
       if (file.size > maxSizeMB * 1024 * 1024) {
-        toast.error(`⚠️ "${file.name}" exceeds ${maxSizeMB} MB.`);
+        setError(`⚠️ "${file.name}" exceeds ${maxSizeMB} MB.`);
         return false;
       }
     }
@@ -76,14 +146,6 @@ const UploadForm = () => {
     setError(null);
     setFiles(selected);
   };
-
-  // -- Fetch subjects --
-  async function fetchSubjects(program, semester) {
-    const querySnapshot = await getDocs(
-      collection(db, "resources", program, semester, "subjects")
-    );
-    return querySnapshot.docs.map((doc) => doc.id); // subject names = document IDs
-  }
 
   // --- Options ---
   const programOptions = [
@@ -120,6 +182,24 @@ const UploadForm = () => {
     { value: "syllabus", label: "Syllabus" },
   ];
 
+  // --- Cancel Upload ---
+  const cancelUpload = (fileKey) => {
+    if (uploadTasks[fileKey]) {
+      uploadTasks[fileKey].cancel(); // Firebase uploadTask.cancel()
+      toast("⚠️ Upload cancelled.");
+      setUploadProgress((prev) => {
+        const copy = { ...prev };
+        delete copy[fileKey];
+        return copy;
+      });
+      setUploadTasks((prev) => {
+        const copy = { ...prev };
+        delete copy[fileKey];
+        return copy;
+      });
+    }
+  };
+
   // --- Upload ---
   const onUploadClick = async () => {
     if (!files.length) return setError("⚠️ Select at least one file.");
@@ -138,13 +218,24 @@ const UploadForm = () => {
         setFormData,
         setUploading,
         setUploadProgress,
+        setUploadTasks, // ✅ pass setter for cancel support
         currentUser,
       });
       toast.success("✅ Resource uploaded!");
       setError(null);
-      setFiles([]); // reset files after upload
+      setFiles([]); // reset files
+      setFormData({
+        title: "",
+        description: "",
+        category: "",
+        program: "",
+        year: "",
+        semester: "",
+        subject: "",
+      }); // reset form
     } catch (err) {
       console.error(err);
+      setError("❌ Upload failed. Please try again.");
       toast.error("❌ Upload failed.");
     } finally {
       setUploading(false);
@@ -152,10 +243,11 @@ const UploadForm = () => {
   };
 
   return (
-    <form className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800  rounded-xl space-y-4">
-    
+    <form
+      className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl space-y-4"
+      aria-live="polite"
+    >
       {error && <p className="text-red-500 text-sm">{error}</p>}
-
 
       <input
         type="text"
@@ -168,74 +260,50 @@ const UploadForm = () => {
       />
 
       {/* Category */}
-      <select
+      <SelectInput
         name="category"
         value={formData.category}
         onChange={handleChange}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
-      >
-        <option value="">Select Type</option>
-        {typeOptions.map((t) => (
-          <option key={t.value} value={t.value}>
-            {t.label}
-          </option>
-        ))}
-      </select>
+        options={typeOptions}
+        placeholder="Select Type"
+      />
 
       {/* Program */}
-      <select
+      <SelectInput
         name="program"
         value={formData.program}
         onChange={handleChange}
-        required
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
-      >
-        <option value="">Select Program</option>
-        {programOptions.map((p) => (
-          <option key={p} value={p}>
-            {p}
-          </option>
-        ))}
-      </select>
+        options={programOptions}
+        placeholder="Select Program"
+      />
 
       {/* Year */}
-      <select
+      <SelectInput
         name="year"
         value={formData.year}
         onChange={handleChange}
-        required
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
-      >
-        <option value="">Select Year</option>
-        {yearOptions.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
-        ))}
-      </select>
+        options={yearOptions}
+        placeholder="Select Year"
+      />
 
       {/* Semester */}
-      <select
+      <SelectInput
         name="semester"
         value={formData.semester}
         onChange={handleChange}
-        required
+        options={getSemesterOptions(formData.year).map((s) => ({
+          value: s,
+          label: `Semester ${s}`,
+        }))}
+        placeholder="Select Semester"
         disabled={!formData.year}
-        className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
-      >
-        <option value="">Select Semester</option>
-        {getSemesterOptions(formData.year).map((s) => (
-          <option key={s} value={s}>
-            Semester {s}
-          </option>
-        ))}
-      </select>
+      />
 
       {/* Subject */}
       <FetchSubjects
-        program={formData.program} // must be set in your form state
-        semester={formData.semester} // must be set in your form state
-        value={formData.subject} // current subject value
+        program={formData.program}
+        semester={formData.semester}
+        value={formData.subject}
         onChange={(value) =>
           setFormData((prev) => ({ ...prev, subject: value }))
         }
@@ -252,25 +320,14 @@ const UploadForm = () => {
           file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
       />
 
-      {/* Show selected files before upload */}
+      {/* File List + Progress + Cancel */}
       {files.length > 0 && (
-        <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-          {files.map((f) => (
-            <li key={f.name}>📄 {f.name}</li>
-          ))}
-        </ul>
+        <FileList
+          files={files}
+          uploadProgress={uploadProgress}
+          onCancel={cancelUpload}
+        />
       )}
-
-      {/* Upload Progress */}
-      {Object.entries(uploadProgress).map(([name, progress]) => (
-        <div key={name} className="my-4">
-          <div className="flex justify-between mb-1">
-            <p className="truncate">{name}</p>
-            <span>{progress}%</span>
-          </div>
-          <ProgressBar progress={progress} />
-        </div>
-      ))}
 
       {/* Upload Button */}
       <button

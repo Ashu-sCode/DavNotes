@@ -42,7 +42,7 @@ export default function ManageUsers() {
 
     try {
       await setDoc(doc(db, "users", newUser.uid), {
-        name: newUser.fullName || "",
+        fullName: newUser.fullName || "",
         email: newUser.email,
         role: newUser.role,
       });
@@ -249,7 +249,7 @@ export default function ManageUsers() {
                   placeholder="Full Name"
                   value={newUser.fullName}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, name: e.target.value })
+                    setNewUser({ ...newUser, fullName: e.target.value })
                   }
                   className="w-full mt-1 p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 
                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 
