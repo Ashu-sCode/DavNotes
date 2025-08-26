@@ -130,7 +130,7 @@ const ProgramsPage = () => {
       />
       <meta property="og:type" content="website" />
       <meta property="og:url" content={`${domain}/programs`} />
-      <meta property="og:image" content={`${domain}/preview.png`} />
+      <meta property="og:image" content={`${domain}/images/og-img.png`} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="Programs & Courses | DavNotes" />
@@ -138,7 +138,7 @@ const ProgramsPage = () => {
         name="twitter:description"
         content="Explore all programs/courses on DavNotes. Access semester-wise notes, PYQs, assignments, and syllabus for DAV College & Punjab University students."
       />
-      <meta name="twitter:image" content={`${domain}/preview.png`} />
+      <meta name="twitter:image" content={`${domain}/images/og-img.png`} />
 
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 

@@ -10,7 +10,13 @@ import DOMPurify from "dompurify";
 import toast from "react-hot-toast";
 import Breadcrumb from "../components/BreadCrumb";
 import useMeta from "../hooks/useMeta";
-
+useMeta({
+    title: "DavNotes | Previous Year Papers, Notes, Assignments & Syllabus",
+    description:
+      "Access free semester-wise resources for DAV College students, including previous year question papers (PYQs), detailed study notes, assignments, and updated syllabus. Organized and easy-to-download materials to help you prepare effectively for exams.",
+    ogImage,
+    url: window.location.href,
+  });
 const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
 const domain = "https://davnotes.netlify.app";
 
@@ -82,7 +88,7 @@ export default function SemestersPage() {
       "og:url",
       `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters`
     );
-    setOG("og:image", `${domain}/preview.png`);
+    setOG("og:image", `${domain}/images/og-img.png`);
 
     // Twitter
     const setTwitter = (name, content) => {
@@ -101,7 +107,7 @@ export default function SemestersPage() {
       "twitter:description",
       `Explore ${safeProgramName} semesters on DavNotes with notes, PYQs, syllabus, and assignments.`
     );
-    setTwitter("twitter:image", `${domain}/preview.png`);
+    setTwitter("twitter:image", `${domain}/images/og-img.png`);
   }, [safeProgramName]);
 
   useEffect(() => {

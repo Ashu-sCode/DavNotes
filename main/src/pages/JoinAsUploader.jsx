@@ -1,9 +1,21 @@
 // pages/JoinUploader.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import emailjs from "@emailjs/browser";
 import { motion, AnimatePresence } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+
+// ✅ Helper: validation logic
+const validators = {
+  name: (val) => /^[A-Za-z\s]+$/.test(val.trim()),
+  email: (val) => /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val.trim()),
+  rollNo: (val) => val.trim().length > 0,
+  phone: (val) => /^\d{10}$/.test(val.trim()),
+  college: (val) => val.trim().length > 2,
+  course: (val) => val.trim().length > 1,
+  semester: (val) => /^\d+$/.test(val.trim()) && Number(val) > 0 && Number(val) <= 12,
+  message: (val) => val.trim().length >= 20,
+};
 
 export default function JoinAsUploader() {
   const [formData, setFormData] = useState({
@@ -17,71 +29,86 @@ export default function JoinAsUploader() {
     message: "",
   });
 
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [reviewMode, setReviewMode] = useState(false);
   const submittingRef = useRef(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const steps = ["Personal Info", "Contact", "Education", "Message", "Review"];
 
-  // Validation per step
-  const validateStep = () => {
-    if (step === 1) {
-      if (!formData.name || !formData.email) {
-        toast.error("Name and Email are required.");
-        return false;
-      }
-      if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) {
-        toast.error("Please enter a valid email.");
-        return false;
-      }
-    }
-    if (step === 2) {
-      if (!formData.rollNo || !formData.phone) {
-        toast.error("Roll No and Phone are required.");
-        return false;
-      }
-      if (!/^\d{10}$/.test(formData.phone)) {
-        toast.error("Phone must be 10 digits.");
-        return false;
-      }
-    }
-    if (step === 3) {
-      if (!formData.college || !formData.course || !formData.semester) {
-        toast.error("College, Course, and Semester are required.");
-        return false;
-      }
-    }
-    return true;
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" }); // clear error
   };
 
-  const nextStep = () => validateStep() && setStep(step + 1);
+  // ✅ Auto-focus next step
+  useEffect(() => {
+    const firstInput = document.querySelector("form input, form textarea");
+    if (firstInput) firstInput.focus();
+  }, [step]);
+
+  // ✅ Step validation
+  const validateStep = () => {
+    let newErrors = {};
+    if (step === 1) {
+      if (!validators.name(formData.name)) newErrors.name = "Enter a valid name.";
+      if (!validators.email(formData.email)) newErrors.email = "Enter a valid email.";
+    }
+    if (step === 2) {
+      if (!validators.rollNo(formData.rollNo)) newErrors.rollNo = "Roll No is required.";
+      if (!validators.phone(formData.phone)) newErrors.phone = "Enter a valid 10-digit phone.";
+    }
+    if (step === 3) {
+      if (!validators.college(formData.college)) newErrors.college = "College is required.";
+      if (!validators.course(formData.course)) newErrors.course = "Course is required.";
+      if (!validators.semester(formData.semester)) newErrors.semester = "Semester must be 1–12.";
+    }
+    if (step === 4) {
+      if (!validators.message(formData.message))
+        newErrors.message = "Message must be at least 20 characters.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const nextStep = () => {
+    if (validateStep()) {
+      if (step === 4) setReviewMode(true);
+      setStep(step + 1);
+    }
+  };
   const prevStep = () => setStep(step - 1);
+
+  // ✅ Secure sanitize function
+  const sanitizeInput = (str) =>
+    str.replace(/[<>$]/g, "").trim(); // simple sanitization
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submittingRef.current) return;
     submittingRef.current = true;
 
-    if (!formData.message) {
-      toast.error("Please write why you want to be an uploader.");
+    if (!validateStep()) {
       submittingRef.current = false;
       return;
     }
 
     setLoading(true);
+    const sanitizedData = Object.fromEntries(
+      Object.entries(formData).map(([k, v]) => [k, sanitizeInput(v)])
+    );
 
     try {
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        formData,
+        sanitizedData,
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       );
 
       toast.success("✅ Request sent successfully!");
-
       setFormData({
         name: "",
         email: "",
@@ -92,22 +119,18 @@ export default function JoinAsUploader() {
         semester: "",
         message: "",
       });
-
       navigate("/join-as-uploader/success", { state: { fromForm: true } });
     } catch (err) {
       console.error(err);
-      toast.error("❌ Failed to send request. Try again.");
+      toast.error(`❌ Failed: ${err.text || "Please try again later."}`);
     } finally {
       setLoading(false);
       submittingRef.current = false;
     }
   };
 
-  const steps = ["Personal Info", "Contact", "Education", "Message"];
-
   return (
     <div className="min-h-screen mt-12 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
-   
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -118,11 +141,18 @@ export default function JoinAsUploader() {
           Join as Uploader
         </h1>
 
-        {/* Step Progress Bar */}
-        <div className="mb-6">
+        {/* Step Progress Bar (Accessible) */}
+        <div className="mb-6" aria-label="Progress bar" role="progressbar" aria-valuemin="1" aria-valuemax={steps.length} aria-valuenow={step}>
           <div className="flex justify-between mb-2">
             {steps.map((label, i) => (
-              <div key={i} className="flex flex-col items-center">
+              <button
+                key={i}
+                type="button"
+                onClick={() => setStep(i + 1)}
+                disabled={i + 1 > step}
+                className="flex flex-col items-center focus:outline-none"
+                aria-label={`Go to step ${i + 1}: ${label}`}
+              >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-medium ${
                     step === i + 1
@@ -133,7 +163,7 @@ export default function JoinAsUploader() {
                   {i + 1}
                 </div>
                 <span className="text-xs mt-1 text-gray-600 dark:text-gray-300">{label}</span>
-              </div>
+              </button>
             ))}
           </div>
           <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
@@ -145,79 +175,68 @@ export default function JoinAsUploader() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <AnimatePresence exitBeforeEnter>
-            {/* Step 1 */}
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-4"
-              >
-                <FormField label="Full Name" name="name" value={formData.name} onChange={handleChange} tip="Enter your full legal name." />
-                <FormField label="Email Address" type="email" name="email" value={formData.email} onChange={handleChange} tip="We'll notify you when verified." />
-              </motion.div>
+          <AnimatePresence mode="wait">
+            {!reviewMode && (
+              <>
+                {/* Step 1 */}
+                {step === 1 && (
+                  <StepWrapper key="step1">
+                    <FormField label="Full Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} required />
+                    <FormField label="Email Address" type="email" name="email" value={formData.email} onChange={handleChange} error={errors.email} required />
+                  </StepWrapper>
+                )}
+
+                {/* Step 2 */}
+                {step === 2 && (
+                  <StepWrapper key="step2">
+                    <FormField label="College Roll No" name="rollNo" value={formData.rollNo} onChange={handleChange} error={errors.rollNo} required />
+                    <FormField label="Phone Number" type="tel" name="phone" value={formData.phone} onChange={handleChange} error={errors.phone} required />
+                  </StepWrapper>
+                )}
+
+                {/* Step 3 */}
+                {step === 3 && (
+                  <StepWrapper key="step3">
+                    <FormField label="College / University" name="college" value={formData.college} onChange={handleChange} error={errors.college} required />
+                    <FormField label="Course" name="course" value={formData.course} onChange={handleChange} error={errors.course} required />
+                    <FormField label="Semester" name="semester" value={formData.semester} onChange={handleChange} error={errors.semester} required />
+                  </StepWrapper>
+                )}
+
+                {/* Step 4 */}
+                {step === 4 && (
+                  <StepWrapper key="step4">
+                    <FormField
+                      label="Why do you want to be an uploader?"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      error={errors.message}
+                      textarea
+                      required
+                    />
+                  </StepWrapper>
+                )}
+              </>
             )}
 
-            {/* Step 2 */}
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <FormField label="College Roll No" name="rollNo" value={formData.rollNo} onChange={handleChange} tip="Enter your official college roll number." />
-                <FormField label="Phone Number" type="tel" name="phone" value={formData.phone} onChange={handleChange} tip="Provide a valid 10-digit number." />
-              </motion.div>
-            )}
-
-            {/* Step 3 */}
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-4"
-              >
-                <FormField label="College / University" name="college" value={formData.college} onChange={handleChange} tip="Name of your college or university." />
-                <FormField label="Course" name="course" value={formData.course} onChange={handleChange} tip="Example: BCA, BBA, etc." />
-                <FormField label="Semester" name="semester" value={formData.semester} onChange={handleChange} tip="Which semester are you currently in?" />
-              </motion.div>
-            )}
-
-            {/* Step 4 */}
-            {step === 4 && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Why do you want to be an uploader?
-                  </label>
-                  <textarea
-                    name="message"
-                    rows="4"
-                    value={formData.message}
-                    onChange={handleChange}
-                    className="mt-1 p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Explain briefly why you want to contribute as an uploader.
-                  </span>
+            {/* Review Step */}
+            {reviewMode && step === 5 && (
+              <StepWrapper key="review">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Review Your Info</h2>
+                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                  {Object.entries(formData).map(([k, v]) => (
+                    <div key={k} className="flex justify-between border-b pb-1">
+                      <span className="font-medium capitalize">{k}:</span>
+                      <span>{v}</span>
+                    </div>
+                  ))}
                 </div>
-              </motion.div>
+              </StepWrapper>
             )}
           </AnimatePresence>
 
-          {/* Navigation Buttons */}
+          {/* Navigation */}
           <div className="flex justify-between mt-4">
             {step > 1 && (
               <button
@@ -228,7 +247,7 @@ export default function JoinAsUploader() {
                 Back
               </button>
             )}
-            {step < 4 && (
+            {step < 5 && (
               <button
                 type="button"
                 onClick={nextStep}
@@ -237,7 +256,7 @@ export default function JoinAsUploader() {
                 Next
               </button>
             )}
-            {step === 4 && (
+            {step === 5 && (
               <motion.button
                 type="submit"
                 disabled={loading}
@@ -259,19 +278,60 @@ export default function JoinAsUploader() {
   );
 }
 
-// Reusable Form Field Component
-function FormField({ label, type = "text", name, value, onChange, tip }) {
+// ✅ Step Wrapper (motion)
+function StepWrapper({ children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="space-y-4"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ✅ Accessible FormField
+function FormField({ label, type = "text", name, value, onChange, error, textarea = false, required }) {
+  const inputId = `input-${name}`;
+  const errorId = `error-${name}`;
+
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="mt-1 p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-      />
-      {tip && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">{tip}</span>}
+      <label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {textarea ? (
+        <textarea
+          id={inputId}
+          name={name}
+          value={value}
+          onChange={onChange}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          aria-required={required}
+          rows="4"
+          className="mt-1 p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+        />
+      ) : (
+        <input
+          id={inputId}
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          aria-required={required}
+          className="mt-1 p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+        />
+      )}
+      {error && (
+        <span id={errorId} className="text-xs text-red-500 mt-1">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

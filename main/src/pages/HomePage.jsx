@@ -14,7 +14,7 @@ export default function LandingPage() {
   const [dashboardLink, setDashboardLink] = useState("/programs");
   const [loading, setLoading] = useState(true);
 
-  const ogImage = `${window.location.origin}/.netlify/edge-functions/og?title=Welcome+to+DavNotes&type=home`;
+  const ogImage = `${window.location.origin}/img/og-img.png`;
 
   // ✅ Auth & User Role
   useEffect(() => {

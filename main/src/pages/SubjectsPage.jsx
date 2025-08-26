@@ -81,7 +81,7 @@ export default function SubjectsPage() {
       "og:url",
       `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters/${encodeURIComponent(safeSemester)}/subjects`
     );
-    setOG("og:image", `${domain}/preview.png`);
+    setOG("og:image", `${domain}/images/og-img.png`);
 
     // Twitter
     const setTwitter = (name, content) => {
@@ -100,7 +100,7 @@ export default function SubjectsPage() {
       "twitter:description",
       `Explore subjects of ${safeProgramName} Semester ${safeSemester} on DavNotes with notes, PYQs, syllabus, and assignments.`
     );
-    setTwitter("twitter:image", `${domain}/preview.png`);
+    setTwitter("twitter:image", `${domain}/images/og-img.png`);
   }, [safeProgramName, safeSemester]);
 
     const ogImage = `${window.location.origin}/api/og?title=${encodeURIComponent(

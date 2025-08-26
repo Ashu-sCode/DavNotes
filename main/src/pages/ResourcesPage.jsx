@@ -107,7 +107,7 @@ export default function ResourcesPage() {
         safeSemester
       )}/subjects/${encodeURIComponent(safeSubject)}/resources`
     );
-    setOG("og:image", `${domain}/preview.png`);
+    setOG("og:image", `${domain}/images/og-img.png`);
 
     // Twitter
     const setTwitter = (name, content) => {
@@ -125,7 +125,7 @@ export default function ResourcesPage() {
       "twitter:description",
       `Explore ${safeSubject} resources for ${safeProgramName} Semester ${safeSemester} on DavNotes. Notes, PYQs, syllabus, and assignments.`
     );
-    setTwitter("twitter:image", `${domain}/preview.png`);
+    setTwitter("twitter:image", `${domain}/images/og-img.png`);
   }, [safeProgramName, safeSemester, safeSubject]);
 
   // ---- Fetch Resources with caching ----

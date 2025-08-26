@@ -1,22 +1,45 @@
 // src/hooks/useMeta.js
 import { useEffect } from "react";
 
-export default function useMeta({ title, description, ogImage, url }) {
+export default function useMeta({ 
+  title = "DavNotes - Student Portal", 
+  description = "Access notes, PYQs, syllabus and assignments for BCA & BBA at DAV College.", 
+  ogImage = "/og-img.png", 
+  url = window.location.href 
+}) {
   useEffect(() => {
-    document.title = title || "DavNotes";
+    // Page title
+    document.title = title;
 
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.setAttribute("content", description || "");
+    // Helper to update or create meta tags
+    const setMeta = (selector, attr, value) => {
+      let element = document.querySelector(selector);
+      if (!element) {
+        element = document.createElement("meta");
+        if (selector.includes("property")) {
+          element.setAttribute("property", selector.match(/"([^"]+)"/)[1]);
+        } else {
+          element.setAttribute("name", selector.match(/"([^"]+)"/)[1]);
+        }
+        document.head.appendChild(element);
+      }
+      element.setAttribute(attr, value);
+    };
 
-    // OG tags
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    const ogDesc = document.querySelector('meta[property="og:description"]');
-    const ogUrl = document.querySelector('meta[property="og:url"]');
-    const ogImg = document.querySelector('meta[property="og:image"]');
+    // Standard meta
+    setMeta('meta[name="description"]', "content", description);
 
-    if (ogTitle) ogTitle.setAttribute("content", title);
-    if (ogDesc) ogDesc.setAttribute("content", description);
-    if (ogUrl) ogUrl.setAttribute("content", url);
-    if (ogImg) ogImg.setAttribute("content", ogImage);
+    // Open Graph meta
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", url);
+    setMeta('meta[property="og:image"]', "content", ogImage);
+
+    // Twitter meta (extra, improves previews on Twitter/X)
+    setMeta('meta[name="twitter:title"]', "content", title);
+    setMeta('meta[name="twitter:description"]', "content", description);
+    setMeta('meta[name="twitter:image"]', "content", ogImage);
+    setMeta('meta[name="twitter:card"]', "content", "summary_large_image");
+
   }, [title, description, ogImage, url]);
 }
