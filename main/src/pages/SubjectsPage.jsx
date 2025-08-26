@@ -26,92 +26,17 @@ export default function SubjectsPage() {
 
   const cacheKey = `subjects_${safeProgramName}_${safeSemester}`;
 
-  // ---- Update head dynamically ----
-  useEffect(() => {
-    const title = `${safeProgramName} - Semester ${safeSemester} | DavNotes`;
-    document.title = title;
+  // ---- OG image (dynamic per program/semester) ----
+  const ogImage = `${domain}/api/og?title=${encodeURIComponent(
+    `Semester ${safeSemester}`
+  )}&subtitle=${encodeURIComponent(safeProgramName)}&type=semester`;
 
-    const setMeta = (name, content) => {
-      let tag = document.querySelector(`meta[name="${name}"]`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setMeta(
-      "description",
-      `Explore subjects of ${safeProgramName} Semester ${safeSemester} on DavNotes. Access notes, previous year papers, syllabus, and assignments.`
-    );
-
-    setMeta(
-      "keywords",
-      `DavNotes, ${safeProgramName}, Semester ${safeSemester}, DAV College, Punjab University, notes, syllabus, previous year papers, assignments`
-    );
-
-    // Canonical
-    let linkCanonical = document.querySelector("link[rel='canonical']");
-    if (!linkCanonical) {
-      linkCanonical = document.createElement("link");
-      linkCanonical.setAttribute("rel", "canonical");
-      document.head.appendChild(linkCanonical);
-    }
-    linkCanonical.href = `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters/${encodeURIComponent(safeSemester)}/subjects`;
-
-    // Open Graph
-    const setOG = (property, content) => {
-      let tag = document.querySelector(`meta[property='${property}']`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("property", property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setOG("og:title", title);
-    setOG(
-      "og:description",
-      `Explore subjects of ${safeProgramName} Semester ${safeSemester} on DavNotes with notes, PYQs, syllabus, and assignments.`
-    );
-    setOG("og:type", "website");
-    setOG(
-      "og:url",
-      `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters/${encodeURIComponent(safeSemester)}/subjects`
-    );
-    setOG("og:image", `${domain}/images/og-img.png`);
-
-    // Twitter
-    const setTwitter = (name, content) => {
-      let tag = document.querySelector(`meta[name='${name}']`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setTwitter("twitter:card", "summary_large_image");
-    setTwitter("twitter:title", title);
-    setTwitter(
-      "twitter:description",
-      `Explore subjects of ${safeProgramName} Semester ${safeSemester} on DavNotes with notes, PYQs, syllabus, and assignments.`
-    );
-    setTwitter("twitter:image", `${domain}/images/og-img.png`);
-  }, [safeProgramName, safeSemester]);
-
-    const ogImage = `${window.location.origin}/api/og?title=${encodeURIComponent(
-    `Semester ${semester}`
-  )}&subtitle=${encodeURIComponent(programName)}&type=semester`;
-
+  // ---- Meta / SEO ----
   useMeta({
-    title: `${programName} - Semester ${semester} | DavNotes`,
-    description: `Explore subjects and resources for ${programName}, Semester ${semester}.`,
+    title: `${safeProgramName} - Semester ${safeSemester} | DavNotes`,
+    description: `Explore subjects of ${safeProgramName} Semester ${safeSemester} on DavNotes. Access notes, previous year papers, syllabus, and assignments.`,
     ogImage,
-    url: window.location.href,
+    url: `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters/${encodeURIComponent(safeSemester)}/subjects`,
   });
 
   // ---- Fetch subjects with caching ----
@@ -120,6 +45,7 @@ export default function SubjectsPage() {
       setLoading(true);
       const now = Date.now();
 
+      // Cached subjects
       const cached = localStorage.getItem(cacheKey);
       let cachedData = null;
       if (cached) {
@@ -181,6 +107,26 @@ export default function SubjectsPage() {
     [subjects, sanitizedSearch]
   );
 
+  // ---- JSON-LD structured data ----
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: `${safeProgramName} Semester ${safeSemester} Subjects`,
+    description: `DavNotes provides ${safeProgramName} Semester ${safeSemester} students with notes, previous year papers, syllabus, and assignments from DAV College & Punjab University.`,
+    provider: {
+      "@type": "EducationalOrganization",
+      name: "DavNotes",
+      sameAs: domain,
+    },
+    hasCourseInstance: subjects.map((sub) => ({
+      "@type": "CourseInstance",
+      name: `${safeProgramName} Semester ${safeSemester} - ${sub}`,
+      courseMode: "online",
+      url: `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters/${encodeURIComponent(safeSemester)}/subjects/${encodeURIComponent(sub)}/resources`,
+    })),
+  };
+
+  // ---- Animations ----
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -191,32 +137,12 @@ export default function SubjectsPage() {
     exit: { opacity: 0, y: -20 },
   };
 
-  // ---- JSON-LD structured data ----
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    "name": `${safeProgramName} Semester ${safeSemester} Subjects`,
-    "description": `DavNotes provides ${safeProgramName} Semester ${safeSemester} students with notes, previous year papers, syllabus, and assignments from DAV College & Punjab University.`,
-    "provider": {
-      "@type": "EducationalOrganization",
-      "name": "DavNotes",
-      "sameAs": domain
-    },
-    "hasCourseInstance": subjects.map((sub) => ({
-      "@type": "CourseInstance",
-      "name": `${safeProgramName} Semester ${safeSemester} - ${sub}`,
-      "courseMode": "online",
-      "url": `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters/${encodeURIComponent(safeSemester)}/subjects/${encodeURIComponent(sub)}/resources`
-    }))
-  };
-
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
-
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-      <Breadcrumb/>
+        <Breadcrumb />
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 dark:text-gray-50">

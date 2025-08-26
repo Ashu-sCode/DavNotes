@@ -10,13 +10,7 @@ import DOMPurify from "dompurify";
 import toast from "react-hot-toast";
 import Breadcrumb from "../components/BreadCrumb";
 import useMeta from "../hooks/useMeta";
-useMeta({
-    title: "DavNotes | Previous Year Papers, Notes, Assignments & Syllabus",
-    description:
-      "Access free semester-wise resources for DAV College students, including previous year question papers (PYQs), detailed study notes, assignments, and updated syllabus. Organized and easy-to-download materials to help you prepare effectively for exams.",
-    ogImage,
-    url: window.location.href,
-  });
+
 const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
 const domain = "https://davnotes.netlify.app";
 
@@ -32,84 +26,22 @@ export default function SemestersPage() {
     [programName]
   );
 
-  // ---- Update document head dynamically ----
-  useEffect(() => {
-    document.title = `${safeProgramName} - Semesters | DavNotes`;
+  // Generate dynamic OG image for this program
+  const ogImage = `${window.location.origin}/api/og?title=${encodeURIComponent(
+    programName
+  )}&subtitle=Programs&type=program`;
 
-    const setMeta = (name, content) => {
-      let tag = document.querySelector(`meta[name="${name}"]`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setMeta(
-      "description",
-      `Explore ${safeProgramName} semesters on DavNotes. Access notes, previous year papers, syllabus, and assignments for each semester.`
-    );
-
-    setMeta(
-      "keywords",
-      `DavNotes, ${safeProgramName}, DAV College, DavCollege Notes, Punjab University notes, syllabus, previous year papers, exams, assignments`
-    );
-
-    // Canonical
-    let linkCanonical = document.querySelector("link[rel='canonical']");
-    if (!linkCanonical) {
-      linkCanonical = document.createElement("link");
-      linkCanonical.setAttribute("rel", "canonical");
-      document.head.appendChild(linkCanonical);
-    }
-    linkCanonical.href = `${domain}/programs/${encodeURIComponent(
+  // ✅ Use the useMeta hook for all meta/SEO tags
+  useMeta({
+    title: `${safeProgramName} - Semesters | DavNotes`,
+    description: `Explore ${safeProgramName} semesters on DavNotes. Access notes, previous year papers (PYQs), syllabus, and assignments.`,
+    ogImage,
+    url: `${domain}/programs/${encodeURIComponent(
       safeProgramName
-    )}/semesters`;
+    )}/semesters`,
+  });
 
-    // Open Graph
-    const setOG = (property, content) => {
-      let tag = document.querySelector(`meta[property='${property}']`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("property", property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setOG("og:title", `${safeProgramName} - Semesters | DavNotes`);
-    setOG(
-      "og:description",
-      `Explore ${safeProgramName} semesters on DavNotes with notes, PYQs, syllabus, and assignments.`
-    );
-    setOG("og:type", "website");
-    setOG(
-      "og:url",
-      `${domain}/programs/${encodeURIComponent(safeProgramName)}/semesters`
-    );
-    setOG("og:image", `${domain}/images/og-img.png`);
-
-    // Twitter
-    const setTwitter = (name, content) => {
-      let tag = document.querySelector(`meta[name='${name}']`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setTwitter("twitter:card", "summary_large_image");
-    setTwitter("twitter:title", `${safeProgramName} - Semesters | DavNotes`);
-    setTwitter(
-      "twitter:description",
-      `Explore ${safeProgramName} semesters on DavNotes with notes, PYQs, syllabus, and assignments.`
-    );
-    setTwitter("twitter:image", `${domain}/images/og-img.png`);
-  }, [safeProgramName]);
-
+  // Fetch semesters from Firestore with caching
   useEffect(() => {
     const fetchSemesters = async () => {
       setLoading(true);
@@ -144,7 +76,10 @@ export default function SemestersPage() {
           (a, b) => Number(a) - Number(b)
         );
 
-        if (!cachedData || JSON.stringify(semesterList) !== JSON.stringify(cachedData)) {
+        if (
+          !cachedData ||
+          JSON.stringify(semesterList) !== JSON.stringify(cachedData)
+        ) {
           setSemesters(semesterList);
           localStorage.setItem(
             cacheKey,
@@ -162,6 +97,7 @@ export default function SemestersPage() {
     fetchSemesters();
   }, [safeProgramName]);
 
+  // Navigate to subjects page
   const openSemester = (semester) => {
     const safeSemester = DOMPurify.sanitize(String(semester));
     navigate(
@@ -171,7 +107,7 @@ export default function SemestersPage() {
     );
   };
 
-  // JSON-LD
+  // JSON-LD structured data for SEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -192,6 +128,7 @@ export default function SemestersPage() {
     })),
   };
 
+  // Animations
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -203,24 +140,13 @@ export default function SemestersPage() {
     exit: { opacity: 0, y: -20 },
   };
 
-    const ogImage = `${window.location.origin}/api/og?title=${encodeURIComponent(
-    programName
-  )}&subtitle=Programs&type=program`;
-
-  useMeta({
-    title: `${programName} | DavNotes`,
-    description: `Explore semesters and resources for ${programName} program.`,
-    ogImage,
-    url: window.location.href,
-  });
-
   return (
     <>
+      {/* JSON-LD script */}
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
-
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-      <Breadcrumb/>
+        <Breadcrumb />
         {/* Header */}
         <div className="relative h-48 rounded-xl overflow-hidden mb-8">
           <img

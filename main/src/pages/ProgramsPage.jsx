@@ -78,7 +78,6 @@ const ProgramsPage = () => {
   const openProgram = (programName) => {
     navigate(`/program/${encodeURIComponent(programName)}`);
   };
-  
 
   const sanitizedSearch = useMemo(() => DOMPurify.sanitize(search), [search]);
 
@@ -107,39 +106,19 @@ const ProgramsPage = () => {
     })),
   };
 
- 
+  // ---- Meta Tags (via useMeta) ----
+  const ogImage = `${window.location.origin}/api/og?title=Programs&type=programs`;
+  useMeta({
+    title: "Programs & Courses | DavNotes",
+    description:
+      "Explore all programs/courses on DavNotes. Access semester-wise notes, previous year papers, assignments, and syllabus for DAV College & Punjab University students.",
+    ogImage,
+    url: `${domain}/programs`,
+  });
 
   return (
     <>
-      {/* SEO Tags */}
-      <title>Programs & Courses | DavNotes</title>
-      <meta
-        name="description"
-        content="Explore all programs/courses on DavNotes. Access semester-wise notes, previous year papers, assignments, and syllabus for DAV College & Punjab University students."
-      />
-      <meta
-        name="keywords"
-        content="DavNotes, BCA, BBA, BA, BCOM, DAV College, DavCollege Notes, Punjab University notes, notes, syllabus, previous year papers, exams, assignments, DAV College assignments, PU exams, Panjab University Exams"
-      />
-      <link rel="canonical" href={`${domain}/programs`} />
-
-      <meta property="og:title" content="Programs & Courses | DavNotes" />
-      <meta
-        property="og:description"
-        content="Explore all programs/courses on DavNotes. Access semester-wise notes, PYQs, assignments, and syllabus for DAV College & Punjab University students."
-      />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content={`${domain}/programs`} />
-      <meta property="og:image" content={`${domain}/images/og-img.png`} />
-
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="Programs & Courses | DavNotes" />
-      <meta
-        name="twitter:description"
-        content="Explore all programs/courses on DavNotes. Access semester-wise notes, PYQs, assignments, and syllabus for DAV College & Punjab University students."
-      />
-      <meta name="twitter:image" content={`${domain}/images/og-img.png`} />
-
+      {/* Structured Data */}
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
       {/* Page Content */}

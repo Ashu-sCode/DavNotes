@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DOMPurify from "dompurify";
 import { logEventUtil } from "../utils/LogEventUtil";
 import Breadcrumb from "../components/BreadCrumb";
+import useMeta from "../hooks/useMeta";
 
 const domain = "https://davnotes.netlify.app";
 
@@ -46,87 +47,21 @@ export default function ResourcesPage() {
     { key: "syllabus", label: "Syllabus" },
   ];
 
-  // ---- Dynamic Head Tags ----
-  useEffect(() => {
-    const title = `${safeSubject} Resources - ${safeProgramName} Semester ${safeSemester} | DavNotes`;
-    document.title = title;
+    // --- SEO/Meta ---
+  const title = `${safeSubject} Resources - ${safeProgramName} Semester ${safeSemester} | DavNotes`;
+  const url = `${domain}/programs/${encodeURIComponent(
+    safeProgramName
+  )}/semesters/${encodeURIComponent(
+    safeSemester
+  )}/subjects/${encodeURIComponent(safeSubject)}/resources`;
 
-    const setMeta = (name, content) => {
-      let tag = document.querySelector(`meta[name="${name}"]`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-
-    setMeta(
-      "description",
-      `Explore ${safeSubject} resources for ${safeProgramName} Semester ${safeSemester} on DavNotes. Access notes, PYQs, syllabus, and assignments.`
-    );
-    setMeta(
-      "keywords",
-      `DavNotes, ${safeProgramName}, Semester ${safeSemester}, ${safeSubject}, notes, PYQs, syllabus, assignments, DAV College, Punjab University`
-    );
-
-    // Canonical
-    let linkCanonical = document.querySelector("link[rel='canonical']");
-    if (!linkCanonical) {
-      linkCanonical = document.createElement("link");
-      linkCanonical.setAttribute("rel", "canonical");
-      document.head.appendChild(linkCanonical);
-    }
-    linkCanonical.href = `${domain}/programs/${encodeURIComponent(
-      safeProgramName
-    )}/semesters/${encodeURIComponent(
-      safeSemester
-    )}/subjects/${encodeURIComponent(safeSubject)}/resources`;
-
-    // Open Graph
-    const setOG = (property, content) => {
-      let tag = document.querySelector(`meta[property='${property}']`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("property", property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-    setOG("og:title", title);
-    setOG(
-      "og:description",
-      `Explore ${safeSubject} resources for ${safeProgramName} Semester ${safeSemester} on DavNotes. Notes, PYQs, syllabus, and assignments.`
-    );
-    setOG("og:type", "website");
-    setOG(
-      "og:url",
-      `${domain}/programs/${encodeURIComponent(
-        safeProgramName
-      )}/semesters/${encodeURIComponent(
-        safeSemester
-      )}/subjects/${encodeURIComponent(safeSubject)}/resources`
-    );
-    setOG("og:image", `${domain}/images/og-img.png`);
-
-    // Twitter
-    const setTwitter = (name, content) => {
-      let tag = document.querySelector(`meta[name='${name}']`);
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", content);
-    };
-    setTwitter("twitter:card", "summary_large_image");
-    setTwitter("twitter:title", title);
-    setTwitter(
-      "twitter:description",
-      `Explore ${safeSubject} resources for ${safeProgramName} Semester ${safeSemester} on DavNotes. Notes, PYQs, syllabus, and assignments.`
-    );
-    setTwitter("twitter:image", `${domain}/images/og-img.png`);
-  }, [safeProgramName, safeSemester, safeSubject]);
+  useMeta({
+    title,
+    description: `Explore ${safeSubject} resources for ${safeProgramName} Semester ${safeSemester} on DavNotes. Access notes, PYQs, syllabus, and assignments.`,
+    keywords: `DavNotes, ${safeProgramName}, Semester ${safeSemester}, ${safeSubject}, notes, PYQs, syllabus, assignments, DAV College, Punjab University`,
+    ogImage: `${domain}/images/og-img.png`,
+    url,
+  });
 
   // ---- Fetch Resources with caching ----
   useEffect(() => {
@@ -259,9 +194,8 @@ export default function ResourcesPage() {
     <>
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
 
-
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-8">
-      <Breadcrumb/>
+        <Breadcrumb />
         <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-50">
           {safeSubject} Resources
         </h1>
