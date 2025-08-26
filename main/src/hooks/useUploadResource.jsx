@@ -14,7 +14,7 @@ import { storage, db } from "../api/firebase";
 import { PDFDocument } from "pdf-lib";
 
 // --- Constants ---
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 20 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = [
   "application/pdf",
   "image/jpeg",
