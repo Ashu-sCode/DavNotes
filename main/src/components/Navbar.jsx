@@ -1,6 +1,6 @@
 // src/components/Navbar.jsx
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import toast from "react-hot-toast";
@@ -15,6 +15,7 @@ export default function Navbar() {
   const [role, setRole] = useState(""); // admin, uploader, or ""
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const menuButtonRef = useRef(null);
 
   // Listen for auth state changes and fetch role
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function Navbar() {
           setUser(currentUser);
         } catch (error) {
           console.error("Error fetching user role:", error);
+          toast.error("Failed to fetch user role. Please try again.");
         }
       } else {
         setUser(null);
@@ -50,19 +52,45 @@ export default function Navbar() {
     navigate("/");
   };
 
-  const toggleMenu = () => setIsOpen((prev) => !prev);
+  const toggleMenu = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
-  const navLinks = [
-   
-    { label: "Resources", to: "/programs" },  { label: "About", to: "/about" },{ label: "Contact", to: "/contact" },{ label: "Home", to: "/" },
-    ...(role === "admin" ? [{ label: "Admin Dashboard", to: "/admin/dashboard" }] : []),
-    ...(role === "uploader" ? [{ label: "Uploader Dashboard", to: "/uploader/dashboard" }] : []),
-  ];
+  // Accessibility: ESC key closes mobile menu
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        menuButtonRef.current?.focus(); // return focus to toggle button
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  // Memoize navLinks to avoid recalculation
+  const navLinks = useMemo(
+    () => [
+      { label: "Home", to: "/" },
+      { label: "Resources", to: "/programs" },
+      { label: "About", to: "/about" },
+      { label: "Contact", to: "/contact" },
+      ...(role === "admin" ? [{ label: "Admin Dashboard", to: "/admin/dashboard" }] : []),
+      ...(role === "uploader" ? [{ label: "Uploader Dashboard", to: "/uploader/dashboard" }] : []),
+    ],
+    [role]
+  );
 
   return (
     <>
       {/* Navbar */}
-      <nav className="bg-blue-600 dark:bg-gray-900 text-white shadow-md fixed w-full z-50 top-0 backdrop-blur-sm">
+      <nav
+        className="bg-blue-600 dark:bg-gray-900 text-white shadow-md fixed w-full z-50 top-0 backdrop-blur-sm"
+        role="navigation"
+        aria-label="Main Navigation"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -82,13 +110,17 @@ export default function Navbar() {
               ) : (
                 <>
                   {navLinks.map((link) => (
-                    <Link
+                    <NavLink
                       key={link.to}
                       to={link.to}
-                      className="hover:underline hover:text-gray-300 transition-colors"
+                      className={({ isActive }) =>
+                        `transition-colors hover:underline ${
+                          isActive ? "text-yellow-300 font-semibold" : "hover:text-gray-300"
+                        }`
+                      }
                     >
                       {link.label}
-                    </Link>
+                    </NavLink>
                   ))}
                   <ThemeToggle />
                   {user && (
@@ -106,7 +138,13 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <div className="md:hidden flex items-center gap-4">
               <ThemeToggle />
-              <button onClick={toggleMenu} aria-label="Toggle Menu">
+              <button
+                ref={menuButtonRef}
+                onClick={toggleMenu}
+                aria-label="Toggle Menu"
+                aria-expanded={isOpen}
+                aria-controls="mobile-menu"
+              >
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
@@ -132,6 +170,7 @@ export default function Navbar() {
             {/* Slide-in Menu */}
             <motion.div
               key="mobileMenu"
+              id="mobile-menu"
               initial={{ x: "100%", opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0 }}
@@ -160,9 +199,17 @@ export default function Navbar() {
                         variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
                         transition={{ duration: 0.3 }}
                       >
-                        <Link to={link.to} onClick={toggleMenu} className="hover:underline hover:text-gray-300">
+                        <NavLink
+                          to={link.to}
+                          onClick={toggleMenu}
+                          className={({ isActive }) =>
+                            `block transition-colors hover:underline ${
+                              isActive ? "text-yellow-300 font-semibold" : "hover:text-gray-300"
+                            }`
+                          }
+                        >
                           {link.label}
-                        </Link>
+                        </NavLink>
                       </motion.div>
                     ))}
 

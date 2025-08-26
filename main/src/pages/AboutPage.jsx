@@ -35,21 +35,20 @@ export default function AboutPage() {
   ];
 
   const contributors = [
-  {
-    name: "Ashutosh",
-    role: "BCA 3",
-    profile: "https://portfolio-ashutoshh.netlify.app/",
-    avatar: "https://i.pravatar.cc/150?img=3"
-  },
-  {
-    name: "Shruti Bhargav",
-    role: "BCA 3",
-    profile: "https://github.com/shruti-bhargav",
-    avatar: "https://i.pravatar.cc/150?img=2"
-  },
-
-];
-
+    {
+      name: "Ashutosh",
+      role: "BCA 3",
+      profile: "https://portfolio-ashutoshh.netlify.app/",
+      avatar: "https://i.pravatar.cc/150?img=3",
+    },
+    {
+      name: "Shruti Bhargav",
+      role: "BCA 3",
+      profile: "https://github.com/shruti-bhargav",
+      avatar:
+        "https://api.dicebear.com/7.x/adventurer-neutral/png?seed=raven&backgroundColor=7967c6",
+    },
+  ];
 
   // ---- JSON-LD Structured Data ----
   const jsonLdOrganization = {

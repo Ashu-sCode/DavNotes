@@ -54,14 +54,14 @@ export default function LandingPage() {
     {
       title: "Previous Year Question Papers",
       description:
-        "Download semester-wise previous year question papers (PYQs) for BCA, BBA, and other courses at DAV College. DavNotes makes it easy for students to access exam papers, practice tests, and solved papers to prepare effectively and score higher in exams.",
+        "Download semester-wise previous year question papers (PYQs) for BA, BCA, and other courses at DAV College. DavNotes makes it easy for students to access exam papers, practice tests, and solved papers to prepare effectively and score higher in exams.",
       icon: FileText,
       color: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
     },
     {
       title: "Study Notes",
       description:
-        "Access well-structured and student-friendly notes for all subjects. Explore BCA and BBA notes organized semester-wise, uploaded by verified students, to help you revise quickly and understand concepts with clarity.",
+        "Access well-structured and student-friendly notes for all subjects. Explore BCA and BA , etc... notes organized semester-wise, uploaded by verified students, to help you revise quickly and understand concepts with clarity.",
       icon: BookOpen,
       color:
         "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
