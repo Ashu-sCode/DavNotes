@@ -14,7 +14,7 @@ export default function LandingPage() {
   const [dashboardLink, setDashboardLink] = useState("/programs");
   const [loading, setLoading] = useState(true);
 
-  const ogImage = `${window.location.origin}/img/og-img.png`;
+  const ogImage = `${window.location.origin}/images/og-img.png`;
 
   // ✅ Auth & User Role
   useEffect(() => {
