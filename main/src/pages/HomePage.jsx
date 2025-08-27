@@ -56,23 +56,24 @@ export default function LandingPage() {
       description:
         "Download semester-wise previous year question papers (PYQs) for BA, BCA, and other courses at DAV College. DavNotes makes it easy for students to access exam papers, practice tests, and solved papers to prepare effectively and score higher in exams.",
       icon: FileText,
+      aria: "Previous Year Question Papers icon",
       color: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
     },
     {
       title: "Study Notes",
       description:
-        "Access well-structured and student-friendly notes for all subjects. Explore BCA and BA , etc... notes organized semester-wise, uploaded by verified students, to help you revise quickly and understand concepts with clarity.",
+        "Access well-structured and student-friendly notes for all subjects. Explore BCA and BA notes organized semester-wise, uploaded by verified students, to help you revise quickly and understand concepts with clarity.",
       icon: BookOpen,
-      color:
-        "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
+      aria: "Study Notes icon",
+      color: "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
     },
     {
       title: "Assignments & Syllabus",
       description:
         "Get updated semester-wise syllabus and assignments for your courses. DavNotes ensures that students always have the latest curriculum guidelines, project work, and academic tasks to stay on track throughout their degree.",
       icon: ClipboardList,
-      color:
-        "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300",
+      aria: "Assignments and Syllabus icon",
+      color: "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300",
     },
   ];
 
@@ -85,6 +86,31 @@ export default function LandingPage() {
     url: window.location.href,
   });
 
+  // ✅ Inject JSON-LD Schema
+  useEffect(() => {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "EducationalOccupationalProgram",
+      "name": "DAV College Resources",
+      "educationalLevel": "Undergraduate",
+      "programType": "Notes, Previous Year Papers, Assignments, Syllabus",
+      "provider": {
+        "@type": "CollegeOrUniversity",
+        "name": "DAV College"
+      },
+      "url": "https://davnotes.netlify.app/"
+    };
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.innerHTML = JSON.stringify(schema);
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   // ✅ Loading Screen
   if (loading) {
     return (
@@ -95,7 +121,7 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen  flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
+    <main className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 text-center">
       {/* Hero Section */}
       <section className="flex-1 mt-6 flex flex-col justify-center items-center px-6 py-16">
         <motion.h1
@@ -133,11 +159,11 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Features Section (Redesigned) */}
+      {/* Features Section */}
       <section className="py-16 px-6 bg-gray-50 dark:bg-gray-900 text-left">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-blue-700 dark:text-blue-400 mb-12">
-            What You’ll Find on DavNotes
+            Previous Year Question Papers, Notes & Assignments for DAV College
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -156,7 +182,8 @@ export default function LandingPage() {
                   <div
                     className={`w-12 h-12 flex items-center justify-center rounded-full mb-4 ${feature.color}`}
                   >
-                    <Icon className="w-6 h-6" />
+                    {/* ✅ Icon with aria-label for SEO */}
+                    <Icon className="w-6 h-6" aria-label={feature.aria} />
                   </div>
                   <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
                     {feature.title}
