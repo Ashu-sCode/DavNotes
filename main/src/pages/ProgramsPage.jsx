@@ -21,7 +21,7 @@ const ProgramsPage = () => {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  // ---- Loa from cache on mount ----
+  // ---- Load from cache on mount ----
   useEffect(() => {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
