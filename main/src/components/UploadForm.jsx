@@ -40,10 +40,7 @@ const SelectInput = ({
 
 // ✅ FileList component with cancel functionality
 const FileList = ({ files, uploadProgress, onCancel }) => (
-  <ul
-    className="text-sm text-gray-600 dark:text-gray-300 space-y-2"
-    aria-live="polite"
-  >
+  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
     {files.map((f) => {
       const key = f.name + f.lastModified;
       const progress = uploadProgress[key] ?? null;
@@ -55,7 +52,7 @@ const FileList = ({ files, uploadProgress, onCancel }) => (
             {progress !== null && (
               <button
                 type="button"
-                onClick={() => uploadTasks[fileName]?.cancel()}
+                onClick={() => onCancel(key)}
                 className="text-red-500 hover:underline text-xs ml-2"
               >
                 Cancel
@@ -88,13 +85,16 @@ const UploadForm = () => {
     year: "",
     semester: "",
     subject: "",
+    driveLink: "",
   });
 
   const [files, setFiles] = useState([]);
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({});
   const [uploading, setUploading] = useState(false);
-  const [uploadTasks, setUploadTasks] = useState({}); // ✅ store active upload tasks
+  const [uploadTasks, setUploadTasks] = useState({});
+
+  const [uploadMode, setUploadMode] = useState("file"); // ✅ new toggle
 
   // --- Input sanitization ---
   const sanitizeInput = (input) =>
@@ -111,15 +111,13 @@ const UploadForm = () => {
         }[char])
     );
 
-  // --- Handle text/option changes ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     let updated = { ...formData, [name]: value };
-    if (name === "year") updated.semester = ""; // reset semester on year change
+    if (name === "year") updated.semester = "";
     setFormData(updated);
   };
 
-  // --- File validation ---
   const validateFiles = (files) => {
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
     const maxSizeMB = 5;
@@ -140,11 +138,67 @@ const UploadForm = () => {
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files || []);
     if (!selected.length) return setError("Please choose a file.");
-
     if (!validateFiles(selected)) return;
 
     setError(null);
     setFiles(selected);
+  };
+
+  const cancelUpload = (fileKey) => {
+    if (uploadTasks[fileKey]) {
+      uploadTasks[fileKey].cancel();
+      toast("⚠️ Upload cancelled.");
+      setUploadProgress((prev) => {
+        const copy = { ...prev };
+        delete copy[fileKey];
+        return copy;
+      });
+      setUploadTasks((prev) => {
+        const copy = { ...prev };
+        delete copy[fileKey];
+        return copy;
+      });
+    }
+  };
+
+  // --- Upload ---
+  const onUploadClick = async () => {
+    if (uploadMode === "file" && !files.length) {
+      return setError("⚠️ Select at least one file.");
+    }
+
+    if (uploadMode === "link" && !formData.driveLink.trim()) {
+      return setError("⚠️ Enter a valid Google Drive link.");
+    }
+
+    const sanitized = {
+      ...formData,
+      title: sanitizeInput(formData.title),
+      description: sanitizeInput(formData.description),
+      subject: sanitizeInput(formData.subject),
+    };
+
+    try {
+      setUploading(true);
+
+      await handleUpload({
+        formData: { ...sanitized, file: uploadMode === "file" ? files : [] },
+        setFormData,
+        setUploading,
+        setUploadProgress,
+        setUploadTasks,
+        currentUser,
+      });
+
+      setError(null);
+      setFiles([]);
+    } catch (err) {
+      console.error(err);
+      setError("❌ Upload failed. Please try again.");
+      toast.error("❌ Upload failed.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   // --- Options ---
@@ -182,71 +236,8 @@ const UploadForm = () => {
     { value: "syllabus", label: "Syllabus" },
   ];
 
-  // --- Cancel Upload ---
-  const cancelUpload = (fileKey) => {
-    if (uploadTasks[fileKey]) {
-      uploadTasks[fileKey].cancel(); // Firebase uploadTask.cancel()
-      toast("⚠️ Upload cancelled.");
-      setUploadProgress((prev) => {
-        const copy = { ...prev };
-        delete copy[fileKey];
-        return copy;
-      });
-      setUploadTasks((prev) => {
-        const copy = { ...prev };
-        delete copy[fileKey];
-        return copy;
-      });
-    }
-  };
-
-  // --- Upload ---
-  const onUploadClick = async () => {
-    if (!files.length) return setError("⚠️ Select at least one file.");
-
-    const sanitized = {
-      ...formData,
-      title: sanitizeInput(formData.title),
-      description: sanitizeInput(formData.description),
-      subject: sanitizeInput(formData.subject),
-    };
-
-    try {
-      setUploading(true);
-      await handleUpload({
-        formData: { ...sanitized, file: files },
-        setFormData,
-        setUploading,
-        setUploadProgress,
-        setUploadTasks, // ✅ pass setter for cancel support
-        currentUser,
-      });
-      toast.success("✅ Resource uploaded!");
-      setError(null);
-      setFiles([]); // reset files
-      setFormData({
-        title: "",
-        description: "",
-        category: "",
-        program: "",
-        year: "",
-        semester: "",
-        subject: "",
-      }); // reset form
-    } catch (err) {
-      console.error(err);
-      setError("❌ Upload failed. Please try again.");
-      toast.error("❌ Upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
-    <form
-      className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl space-y-4"
-      aria-live="polite"
-    >
+    <form className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl space-y-4">
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <input
@@ -309,27 +300,60 @@ const UploadForm = () => {
         }
       />
 
-      {/* File Upload */}
-      <input
-        type="file"
-        accept=".pdf,.jpg,.jpeg,.png"
-        multiple
-        onChange={handleFileChange}
-        className="w-full text-sm text-gray-900 dark:text-gray-200
-          file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0
-          file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
-      />
+      {/* Mode Toggle */}
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-2">
+          <input
+            type="radio"
+            value="file"
+            checked={uploadMode === "file"}
+            onChange={(e) => setUploadMode(e.target.value)}
+          />
+          Upload File
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="radio"
+            value="link"
+            checked={uploadMode === "link"}
+            onChange={(e) => setUploadMode(e.target.value)}
+          />
+          Add Drive Link
+        </label>
+      </div>
 
-      {/* File List + Progress + Cancel */}
-      {files.length > 0 && (
-        <FileList
-          files={files}
-          uploadProgress={uploadProgress}
-          onCancel={cancelUpload}
+      {uploadMode === "file" ? (
+        <>
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            multiple
+            onChange={handleFileChange}
+            className="w-full text-sm text-gray-900 dark:text-gray-200
+              file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0
+              file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+          />
+
+          {files.length > 0 && (
+            <FileList
+              files={files}
+              uploadProgress={uploadProgress}
+              onCancel={cancelUpload}
+            />
+          )}
+        </>
+      ) : (
+        <input
+          type="url"
+          name="driveLink"
+          placeholder="Paste Google Drive link"
+          value={formData.driveLink}
+          onChange={handleChange}
+          className="w-full p-3 border rounded-md dark:bg-gray-800 dark:text-white"
+          required
         />
       )}
 
-      {/* Upload Button */}
       <button
         type="button"
         onClick={onUploadClick}
@@ -342,8 +366,10 @@ const UploadForm = () => {
             <Spinner size="sm" light />
             <span>Uploading...</span>
           </>
-        ) : (
+        ) : uploadMode === "file" ? (
           "Upload Resource"
+        ) : (
+          "Save Link"
         )}
       </button>
     </form>
