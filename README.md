@@ -18,7 +18,7 @@
 - 🔍 **Smart Search & Filters** – Find resources quickly  
 - 📈 **Google Analytics Integration** – Track usage & engagement  
 - 🎭 **Smooth Animations** – Powered by Framer Motion  
-- ✉️ **EmailJS Support** – Contact form & uploader contribution requests  
+- ✉️ **EmailJS Support** – Contact form & uploader contribution request
 
 ---
 
