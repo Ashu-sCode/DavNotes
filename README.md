@@ -14,7 +14,7 @@
 - 📊 **Admin Dashboard** – Manage users, uploads, and view real-time stats  
 - 📂 **Resource Management** – Upload, filter, search, delete files easily  
 - 🌙 **Dark/Light Mode** – Full mobile responsive theme toggle  
-- ⚡ **Local Caching** – Faster repeated download
+- ⚡ **Local Caching** – Faster repeated downloads
 - 🔍 **Smart Search & Filters** – Find resources quickly  
 - 📈 **Google Analytics Integration** – Track usage & engagement  
 - 🎭 **Smooth Animations** – Powered by Framer Motion  
