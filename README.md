@@ -5,7 +5,7 @@
 
 ![DavNotes Screenshot](https://github.com/user-attachments/assets/b307f2de-d7ba-4945-b300-a418563e3c18)
 
------
+---
 
 ## 🚀 Features
 
