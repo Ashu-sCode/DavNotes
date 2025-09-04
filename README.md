@@ -7,7 +7,7 @@
 
 ---
 
-## 🚀 Feature
+## 🚀 Features
 
 - 🎓 **Student Resources** – Notes, PYQs, Assignments, Syllabus (by semester & stream)  
 - 🔑 **Role-Based Access** – Admin & Verified Uploader system  
